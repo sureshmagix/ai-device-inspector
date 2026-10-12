@@ -82,6 +82,26 @@
         .radar-polygon {
             transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        .planner-input {
+            width: 100%;
+            color: #e2e8f0;
+            background: rgba(2, 6, 23, 0.72);
+            border: 1px solid rgba(71, 85, 105, 0.75);
+            border-radius: 0.75rem;
+            padding: 0.625rem 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            outline: none;
+            transition: border-color 160ms ease, box-shadow 160ms ease;
+        }
+        .planner-input:focus {
+            border-color: rgba(34, 211, 238, 0.75);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.12);
+        }
+        .planner-input option {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col items-center pb-12 px-4 sm:px-6 selection:bg-cyan-500/30 selection:text-cyan-200">
@@ -394,6 +414,134 @@
                 </div>
             </div>
 
+            <!-- Training Planner: model recommendation and epoch runtime estimator -->
+            <section class="glass-card rounded-3xl p-6 sm:p-7 animate-reveal" style="animation-delay: 360ms;">
+                <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-6">
+                    <div>
+                        <div class="flex items-center gap-2.5">
+                            <span class="p-2 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-300">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m5-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </span>
+                            <h2 class="font-display text-xl font-bold text-white">AI Training Planner</h2>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-2 max-w-2xl leading-relaxed">
+                            Choose a model and workload to estimate training steps, epoch time, and practical hardware needs. Estimates are planning ranges—not a replacement for a short real training calibration run.
+                        </p>
+                    </div>
+                    <span id="trainingDeviceBadge" class="self-start text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-300 border border-slate-700">
+                        Run benchmark to calibrate
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                    <div class="xl:col-span-5 space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <label class="block">
+                                <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Training workload</span>
+                                <select id="trainingTask" class="planner-input" onchange="syncTrainingModels()">
+                                    <option value="text">Text classification / NER</option>
+                                    <option value="embedding">Embeddings / retrieval</option>
+                                    <option value="vision">Image classification</option>
+                                    <option value="speech">Speech fine-tuning</option>
+                                    <option value="llm">LLM LoRA / QLoRA</option>
+                                </select>
+                            </label>
+                            <label class="block">
+                                <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Recommended base model</span>
+                                <select id="trainingModel" class="planner-input" onchange="updateTrainingPlanner()"></select>
+                            </label>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <label class="block col-span-2 sm:col-span-1">
+                                <span id="samplesLabel" class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Examples</span>
+                                <input id="trainingSamples" class="planner-input" type="number" min="1" max="100000000" value="10000" inputmode="numeric" oninput="updateTrainingPlanner()">
+                            </label>
+                            <label class="block col-span-1">
+                                <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Epochs</span>
+                                <input id="trainingEpochs" class="planner-input" type="number" min="1" max="1000" value="3" inputmode="numeric" oninput="updateTrainingPlanner()">
+                            </label>
+                            <label class="block col-span-1">
+                                <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Batch size</span>
+                                <input id="trainingBatch" class="planner-input" type="number" min="1" max="4096" value="32" inputmode="numeric" oninput="updateTrainingPlanner()">
+                            </label>
+                            <label class="block col-span-2 sm:col-span-1">
+                                <span id="unitLabel" class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Tokens / example</span>
+                                <input id="trainingUnit" class="planner-input" type="number" min="1" max="100000" value="128" inputmode="numeric" oninput="updateTrainingPlanner()">
+                            </label>
+                        </div>
+
+                        <div class="rounded-2xl p-4 bg-slate-950/55 border border-slate-800/80">
+                            <div class="flex items-start gap-3">
+                                <svg class="w-4 h-4 mt-0.5 shrink-0 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p id="trainingRouteNote" class="text-xs text-slate-400 leading-relaxed">
+                                    Run the device benchmark to tailor the estimate to your browser's measured compute performance.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="xl:col-span-4 rounded-2xl bg-gradient-to-br from-fuchsia-500/10 via-slate-950/50 to-cyan-500/10 border border-fuchsia-500/20 p-5 flex flex-col justify-between gap-5">
+                        <div>
+                            <div class="text-[11px] font-mono uppercase tracking-wider text-fuchsia-200">Estimated wall-clock runtime</div>
+                            <div id="epochEstimate" class="font-display text-3xl font-bold text-white mt-2">—</div>
+                            <p id="epochEstimateDetail" class="text-xs text-slate-400 mt-1.5 leading-relaxed">Select a workload to see per-epoch and full-run planning ranges.</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 text-xs">
+                            <div class="rounded-xl bg-slate-950/65 border border-slate-800/80 p-3">
+                                <div class="text-slate-500">Steps / epoch</div>
+                                <div id="stepsPerEpoch" class="font-mono font-semibold text-cyan-300 mt-1">—</div>
+                            </div>
+                            <div class="rounded-xl bg-slate-950/65 border border-slate-800/80 p-3">
+                                <div class="text-slate-500">Target accelerator</div>
+                                <div id="trainingAccelerator" class="font-mono font-semibold text-cyan-300 mt-1">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside class="xl:col-span-3 rounded-2xl bg-slate-950/55 border border-slate-800/80 p-5">
+                        <h3 class="font-display text-base font-bold text-slate-100">Training fit</h3>
+                        <dl class="mt-3 space-y-3 text-xs">
+                            <div class="flex items-start justify-between gap-3">
+                                <dt class="text-slate-500">Method</dt>
+                                <dd id="trainingMethod" class="font-mono text-right text-slate-200">—</dd>
+                            </div>
+                            <div class="flex items-start justify-between gap-3">
+                                <dt class="text-slate-500">Approx. accelerator memory</dt>
+                                <dd id="trainingVram" class="font-mono text-right text-slate-200">—</dd>
+                            </div>
+                            <div class="flex items-start justify-between gap-3">
+                                <dt class="text-slate-500">Download / base weights</dt>
+                                <dd id="trainingDownload" class="font-mono text-right text-slate-200">—</dd>
+                            </div>
+                            <div class="pt-3 border-t border-slate-800/80">
+                                <dt class="text-slate-500 mb-1.5">Use it for</dt>
+                                <dd id="trainingUseCase" class="text-slate-300 leading-relaxed">—</dd>
+                            </div>
+                        </dl>
+                    </aside>
+                </div>
+
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div class="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4">
+                        <div class="font-medium text-emerald-300">Best browser use</div>
+                        <p class="text-slate-400 mt-1.5 leading-relaxed">Use this device for inference, data review, embeddings, and evaluation. Browser GPU limits do not equal installed VRAM.</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4">
+                        <div class="font-medium text-cyan-300">For a dependable estimate</div>
+                        <p class="text-slate-400 mt-1.5 leading-relaxed">Run 50–100 optimizer steps with your real data, then multiply median step time by the planner's step count.</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4">
+                        <div class="font-medium text-violet-300">Before a long run</div>
+                        <p class="text-slate-400 mt-1.5 leading-relaxed">Reserve validation and checkpoint time, monitor memory headroom, and start with LoRA rather than full tuning for large LLMs.</p>
+                    </div>
+                </div>
+            </section>
+
         </main>
 
         <!-- Footer -->
@@ -408,6 +556,88 @@
 
     <script>
         let latestDiagnosticReport = null;
+        let trainingPlannerTelemetry = null;
+        let latestTrainingEstimate = null;
+
+        // Planning profiles use conservative reference step times at roughly 1 TFLOPS of usable
+        // accelerator throughput. They are intentionally presented as ranges: input pipelines,
+        // precision, framework kernels, validation, and checkpointing vary substantially by setup.
+        const TRAINING_PROFILES = [
+            {
+                id: 'distilbert', task: 'text', name: 'DistilBERT base uncased',
+                parameters: '67M parameters', method: 'Full fine-tune', vram: '6–8 GB', download: '~270 MB',
+                useCase: 'Intent classification, sentiment, NER, and other supervised text tasks.',
+                baseStepMs: 34, referenceBatch: 32, referenceUnit: 128
+            },
+            {
+                id: 'modernbert', task: 'text', name: 'ModernBERT-base',
+                parameters: '149M parameters', method: 'Full fine-tune or LoRA', vram: '10–12 GB', download: '~600 MB',
+                useCase: 'Higher-quality classification and long-context text adaptation.',
+                baseStepMs: 68, referenceBatch: 16, referenceUnit: 256
+            },
+            {
+                id: 'bge-small', task: 'embedding', name: 'BGE-small-en-v1.5',
+                parameters: '33M parameters', method: 'Contrastive fine-tune', vram: '6–8 GB', download: '~130 MB',
+                useCase: 'Semantic search, reranking experiments, and RAG retrieval.',
+                baseStepMs: 46, referenceBatch: 32, referenceUnit: 128
+            },
+            {
+                id: 'e5-base', task: 'embedding', name: 'E5-base-v2',
+                parameters: '109M parameters', method: 'Contrastive fine-tune', vram: '8–12 GB', download: '~440 MB',
+                useCase: 'Higher-recall dense retrieval using query / passage pairs.',
+                baseStepMs: 92, referenceBatch: 16, referenceUnit: 256
+            },
+            {
+                id: 'mobilenet', task: 'vision', name: 'MobileNetV3-Small',
+                parameters: '2.5M parameters', method: 'Full fine-tune', vram: '4–6 GB', download: '~10 MB',
+                useCase: 'Mobile-friendly image classification and visual quality checks.',
+                baseStepMs: 36, referenceBatch: 32, referenceUnit: 224
+            },
+            {
+                id: 'vit-base', task: 'vision', name: 'ViT-Base Patch16-224',
+                parameters: '86M parameters', method: 'Linear probe → fine-tune', vram: '10–16 GB', download: '~330 MB',
+                useCase: 'Higher-accuracy image classification when a GPU is available.',
+                baseStepMs: 130, referenceBatch: 16, referenceUnit: 224
+            },
+            {
+                id: 'whisper-tiny', task: 'speech', name: 'Whisper Tiny',
+                parameters: '39M parameters', method: 'LoRA / supervised fine-tune', vram: '8–10 GB', download: '~150 MB',
+                useCase: 'Domain vocabulary, accents, and short command transcription.',
+                baseStepMs: 260, referenceBatch: 8, referenceUnit: 15
+            },
+            {
+                id: 'whisper-base', task: 'speech', name: 'Whisper Base',
+                parameters: '74M parameters', method: 'LoRA / supervised fine-tune', vram: '12–16 GB', download: '~290 MB',
+                useCase: 'Better speech accuracy for domain-specific audio datasets.',
+                baseStepMs: 480, referenceBatch: 4, referenceUnit: 15
+            },
+            {
+                id: 'qwen-1.5b', task: 'llm', name: 'Qwen2.5-1.5B-Instruct',
+                parameters: '1.5B parameters', method: 'QLoRA (4-bit base)', vram: '8–12 GB', download: '~1.2 GB (4-bit)',
+                useCase: 'Small assistant, extraction, classification, and structured-output tuning.',
+                baseStepMs: 1450, referenceBatch: 1, referenceUnit: 512
+            },
+            {
+                id: 'llama-3b', task: 'llm', name: 'Llama 3.2 3B Instruct',
+                parameters: '3B parameters', method: 'QLoRA (4-bit base)', vram: '12–16 GB', download: '~2.0 GB (4-bit)',
+                useCase: 'More capable local assistant and instruction-following fine-tuning.',
+                baseStepMs: 2850, referenceBatch: 1, referenceUnit: 512
+            },
+            {
+                id: 'qwen-7b', task: 'llm', name: 'Qwen2.5-7B-Instruct',
+                parameters: '7B parameters', method: 'QLoRA (4-bit base)', vram: '18–24 GB', download: '~4.6 GB (4-bit)',
+                useCase: 'Higher-quality domain assistant when a larger local or cloud GPU is available.',
+                baseStepMs: 5900, referenceBatch: 1, referenceUnit: 512
+            }
+        ];
+
+        const TRAINING_TASK_DEFAULTS = {
+            text: { samples: 10000, epochs: 3, batch: 32, unit: 128, samplesLabel: 'Text examples', unitLabel: 'Tokens / example' },
+            embedding: { samples: 30000, epochs: 3, batch: 32, unit: 128, samplesLabel: 'Pairs / examples', unitLabel: 'Tokens / item' },
+            vision: { samples: 5000, epochs: 5, batch: 32, unit: 224, samplesLabel: 'Training images', unitLabel: 'Image side (px)' },
+            speech: { samples: 2000, epochs: 5, batch: 8, unit: 15, samplesLabel: 'Audio clips', unitLabel: 'Audio sec / clip' },
+            llm: { samples: 5000, epochs: 3, batch: 1, unit: 512, samplesLabel: 'Prompt / response pairs', unitLabel: 'Tokens / example' }
+        };
 
         function setProgress(percent, text) {
             const bar = document.getElementById('scanProgressBar');
@@ -614,6 +844,121 @@
             return `${mb.toFixed(0)} MB`;
         }
 
+        function numberFromInput(id, fallback, min = 1) {
+            const value = Number(document.getElementById(id)?.value);
+            return Number.isFinite(value) && value >= min ? value : fallback;
+        }
+
+        function formatDuration(seconds) {
+            if (!Number.isFinite(seconds) || seconds <= 0) return '—';
+            if (seconds < 60) return `${Math.max(1, Math.round(seconds))} sec`;
+            const minutes = seconds / 60;
+            if (minutes < 90) return `${Math.round(minutes)} min`;
+            const hours = minutes / 60;
+            if (hours < 48) return `${hours.toFixed(hours < 10 ? 1 : 0)} hr`;
+            return `${(hours / 24).toFixed(1)} days`;
+        }
+
+        function trainingTaskScale(task, unit, referenceUnit) {
+            const safeRatio = Math.max(0.2, Math.min(12, unit / referenceUnit));
+            if (task === 'vision') return Math.pow(safeRatio, 2);
+            if (task === 'llm' || task === 'text' || task === 'embedding') return Math.pow(safeRatio, 1.15);
+            return safeRatio;
+        }
+
+        function syncTrainingModels() {
+            const taskSelect = document.getElementById('trainingTask');
+            const modelSelect = document.getElementById('trainingModel');
+            if (!taskSelect || !modelSelect) return;
+
+            const task = taskSelect.value;
+            const previous = modelSelect.value;
+            const choices = TRAINING_PROFILES.filter(profile => profile.task === task);
+            modelSelect.innerHTML = choices.map(profile =>
+                `<option value="${profile.id}">${profile.name} · ${profile.parameters}</option>`
+            ).join('');
+            if (choices.some(profile => profile.id === previous)) modelSelect.value = previous;
+
+            const defaults = TRAINING_TASK_DEFAULTS[task];
+            document.getElementById('samplesLabel').textContent = defaults.samplesLabel;
+            document.getElementById('unitLabel').textContent = defaults.unitLabel;
+            document.getElementById('trainingSamples').value = defaults.samples;
+            document.getElementById('trainingEpochs').value = defaults.epochs;
+            document.getElementById('trainingBatch').value = defaults.batch;
+            document.getElementById('trainingUnit').value = defaults.unit;
+            updateTrainingPlanner();
+        }
+
+        function updateTrainingPlanner() {
+            const task = document.getElementById('trainingTask')?.value || 'text';
+            const modelId = document.getElementById('trainingModel')?.value;
+            const profile = TRAINING_PROFILES.find(item => item.id === modelId) || TRAINING_PROFILES[0];
+            if (!profile) return;
+
+            const defaults = TRAINING_TASK_DEFAULTS[task];
+            const samples = numberFromInput('trainingSamples', defaults.samples);
+            const epochs = numberFromInput('trainingEpochs', defaults.epochs);
+            const batch = numberFromInput('trainingBatch', defaults.batch);
+            const unit = numberFromInput('trainingUnit', defaults.unit);
+            const stepsPerEpoch = Math.ceil(samples / batch);
+
+            const gpuGflops = trainingPlannerTelemetry?.gpuBench?.gflops || 0;
+            const cpuGflops = trainingPlannerTelemetry?.cpuBench?.gflops || 0;
+            const hasGpuCalibration = Boolean(trainingPlannerTelemetry?.webgpuSupported && gpuGflops > 0);
+            // The benchmark is a planning calibration only; browser shader FLOPS does not map 1:1 to framework training kernels.
+            const usableTflops = hasGpuCalibration
+                ? Math.max(0.12, Math.min(5, gpuGflops / 1000))
+                : Math.max(0.05, Math.min(0.35, cpuGflops / 25 || 0.12));
+            const lengthScale = trainingTaskScale(task, unit, profile.referenceUnit);
+            const batchScale = Math.pow(Math.max(0.125, Math.min(16, batch / profile.referenceBatch)), 0.72);
+            const frameworkOverhead = hasGpuCalibration ? 1.35 : 2.2;
+            const secondsPerStep = (profile.baseStepMs * lengthScale * batchScale * frameworkOverhead) / (usableTflops * 1000);
+            const epochSeconds = stepsPerEpoch * secondsPerStep;
+            const totalSeconds = epochSeconds * epochs;
+            const lowSeconds = totalSeconds * 0.65;
+            const highSeconds = totalSeconds * 2.1;
+
+            const estimate = document.getElementById('epochEstimate');
+            const estimateDetail = document.getElementById('epochEstimateDetail');
+            const deviceBadge = document.getElementById('trainingDeviceBadge');
+            const accelerator = document.getElementById('trainingAccelerator');
+            const routeNote = document.getElementById('trainingRouteNote');
+
+            estimate.textContent = `${formatDuration(lowSeconds)} – ${formatDuration(highSeconds)}`;
+            estimateDetail.textContent = `${formatDuration(epochSeconds * 0.65)} – ${formatDuration(epochSeconds * 2.1)} per epoch · ${epochs} epoch${epochs === 1 ? '' : 's'} · excludes data preparation, validation, checkpoints, and downloads.`;
+            document.getElementById('stepsPerEpoch').textContent = stepsPerEpoch.toLocaleString();
+            document.getElementById('trainingMethod').textContent = profile.method;
+            document.getElementById('trainingVram').textContent = profile.vram;
+            document.getElementById('trainingDownload').textContent = profile.download;
+            document.getElementById('trainingUseCase').textContent = profile.useCase;
+
+            if (hasGpuCalibration) {
+                const precision = trainingPlannerTelemetry.shaderF16Supported ? 'FP16 WebGPU' : 'FP32 WebGPU';
+                accelerator.textContent = `${precision} proxy`;
+                deviceBadge.textContent = `Calibrated from ${gpuGflops.toFixed(1)} GFLOPS browser benchmark`;
+                routeNote.textContent = `${profile.name} is planned as ${profile.method}. The estimate scales from this browser's ${gpuGflops.toFixed(1)} GFLOPS shader test, but use a native PyTorch/JAX or cloud accelerator for real training. The ${formatBytes(trainingPlannerTelemetry.maxBufferSizeBytes)} WebGPU buffer limit is not a measurement of installed VRAM.`;
+            } else {
+                accelerator.textContent = cpuGflops ? 'CPU / Wasm proxy' : 'Generic baseline';
+                deviceBadge.textContent = 'CPU fallback — wide estimate range';
+                routeNote.textContent = `${profile.name} is planned as ${profile.method}. No measured WebGPU training proxy is available, so this is intentionally a wide CPU-oriented range. For any LLM or audio fine-tune, use a native GPU runtime or cloud GPU with at least ${profile.vram} available.`;
+            }
+
+            latestTrainingEstimate = {
+                workload: task,
+                model: profile.name,
+                method: profile.method,
+                samples,
+                epochs,
+                batchSize: batch,
+                unitPerExample: unit,
+                stepsPerEpoch,
+                estimatedEpochSeconds: { low: Math.round(epochSeconds * 0.65), high: Math.round(epochSeconds * 2.1) },
+                estimatedTotalSeconds: { low: Math.round(lowSeconds), high: Math.round(highSeconds) },
+                calibration: hasGpuCalibration ? 'WebGPU shader benchmark proxy' : 'CPU / generic planning proxy'
+            };
+            if (latestDiagnosticReport) latestDiagnosticReport.trainingPlanner = latestTrainingEstimate;
+        }
+
         async function runAnalysis() {
             const runBtn = document.getElementById('runBtn');
             const btnText = document.getElementById('btnText');
@@ -716,6 +1061,14 @@
                     availableStorageBytes = Math.max(0, (estimate.quota || 0) - (estimate.usage || 0));
                 } catch {}
             }
+
+            trainingPlannerTelemetry = {
+                webgpuSupported,
+                shaderF16Supported,
+                maxBufferSizeBytes,
+                cpuBench,
+                gpuBench
+            };
 
             setProgress(100, 'Diagnostics complete.');
             await new Promise(r => setTimeout(r, 140));
@@ -969,6 +1322,9 @@
                 </div>
             `).join('');
 
+            // Recalculate the planner after the fresh benchmark so its range uses this device's proxy throughput.
+            updateTrainingPlanner();
+
             // Store structured JSON report for one-click export
             latestDiagnosticReport = {
                 timestamp: new Date().toISOString(),
@@ -992,7 +1348,8 @@
                 benchmarks: {
                     cpuTensorGflops: cpuBench.gflops,
                     webgpuComputeGflops: gpuBench ? gpuBench.gflops : null
-                }
+                },
+                trainingPlanner: latestTrainingEstimate
             };
 
             runBtn.disabled = false;
@@ -1015,6 +1372,7 @@
 
         // Automatically run diagnostics on initial load for instant portfolio preview
         window.addEventListener('DOMContentLoaded', () => {
+            syncTrainingModels();
             runAnalysis();
         });
     </script>

@@ -31,6 +31,15 @@ Evaluates real-world compatibility and estimated inference speeds for:
 * **Compact SLMs (1B–3B)**: `Llama-3.2-1B / Gemma-2-2B` (~1.3 GB `q4f16_1`, WebLLM)
 * **Full Edge LLMs (7B–8B)**: `Qwen-2.5-7B / Llama-3.1-8B` (~4.6 GB `q4f16_1`, WebLLM)
 
+### 4. AI Training Planner & Epoch Runtime Estimates
+Plan a realistic fine-tuning run before opening a local or cloud notebook:
+* **Curated task-specific model choices**: DistilBERT / ModernBERT for text, BGE / E5 for retrieval, MobileNetV3 / ViT for vision, Whisper Tiny / Base for speech, and Qwen / Llama for LLM adapter tuning.
+* **Interactive estimate inputs**: Configure dataset size, epochs, batch size, and token length, image size, or audio duration. The tool returns steps per epoch plus per-epoch and end-to-end wall-clock ranges.
+* **Measured-device calibration**: When WebGPU is available, the range is scaled from the page's shader benchmark; otherwise it intentionally uses a wider CPU baseline range.
+* **Training-fit guidance**: Each model shows its recommended fine-tuning method, approximate accelerator-memory range, download size, and appropriate use case.
+
+The planner is for **capacity planning**, not browser training. WebGPU buffer limits are browser allocations and do not report installed GPU VRAM. For dependable results, run 50–100 optimizer steps in your actual PyTorch/JAX/other training environment and multiply the median step time by the displayed step count. Add time for tokenization, data loading, evaluation, checkpointing, and model downloads.
+
 ---
 
 ## 🚀 Running Locally
