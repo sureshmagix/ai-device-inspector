@@ -31,14 +31,16 @@ Evaluates real-world compatibility and estimated inference speeds for:
 * **Compact SLMs (1B–3B)**: `Llama-3.2-1B / Gemma-2-2B` (~1.3 GB `q4f16_1`, WebLLM)
 * **Full Edge LLMs (7B–8B)**: `Qwen-2.5-7B / Llama-3.1-8B` (~4.6 GB `q4f16_1`, WebLLM)
 
-### 4. AI Training Planner & Epoch Runtime Estimates
+### 4. AI Training Planner **Version 2.0**
 Plan a realistic fine-tuning run before opening a local or cloud notebook:
-* **Curated task-specific model choices**: DistilBERT / ModernBERT for text, BGE / E5 for retrieval, MobileNetV3 / ViT for vision, Whisper Tiny / Base for speech, and Qwen / Llama for LLM adapter tuning.
-* **Interactive estimate inputs**: Configure dataset size, epochs, batch size, and token length, image size, or audio duration. The tool returns steps per epoch plus per-epoch and end-to-end wall-clock ranges.
-* **Measured-device calibration**: When WebGPU is available, the range is scaled from the page's shader benchmark; otherwise it intentionally uses a wider CPU baseline range.
-* **Training-fit guidance**: Each model shows its recommended fine-tuning method, approximate accelerator-memory range, download size, and appropriate use case.
 
-The planner is for **capacity planning**, not browser training. WebGPU buffer limits are browser allocations and do not report installed GPU VRAM. For dependable results, run 50–100 optimizer steps in your actual PyTorch/JAX/other training environment and multiply the median step time by the displayed step count. Add time for tokenization, data loading, evaluation, checkpointing, and model downloads.
+* **17 curated profiles across five workloads**: Text (DistilBERT, DeBERTa-v3, ModernBERT), retrieval (BGE-small, BGE-base, E5-base), vision (MobileNetV3, EfficientNet-B0, ViT), speech (Whisper Tiny/Base/Small), and LLMs (Qwen, Gemma, Llama, Mistral). Each profile includes its family/modality, input shape, parameter count, download size, data guidance, recommended strategy, and a direct model-card link.
+* **Run-aware inputs**: Configure dataset size, validation split, epochs, micro-batch, gradient accumulation, device count, sequence/image/audio size, tuning strategy, precision, data-pipeline efficiency, evaluation/checkpoint cadence, and an optional hourly accelerator rate.
+* **Useful planning outputs**: See update steps per epoch, effective global batch, estimated training volume, model-memory guidance, validation/checkpoint allowances, an optional cost range, and a clear readiness note for risky configurations.
+* **Interactive and mobile-first**: Quick-start presets, copyable plan JSON, responsive two-column controls, touch-friendly input targets, progressively disclosed advanced settings, subtle result animations, and reduced-motion support.
+* **Measured-device calibration**: When WebGPU is available, the range is scaled from the page's shader benchmark; otherwise it deliberately uses a wider CPU baseline range.
+
+The planner is for **capacity planning**, not browser training. WebGPU buffer limits are browser allocations and do not report installed GPU VRAM. For dependable results, run 50–100 optimizer steps in your actual PyTorch/JAX/other training environment and compare the median step time with the displayed plan. Add time for tokenization, data loading, evaluation, checkpointing, model downloads, and any distributed-training communication.
 
 ---
 

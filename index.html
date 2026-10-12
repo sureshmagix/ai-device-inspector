@@ -102,6 +102,59 @@
             background: #0f172a;
             color: #e2e8f0;
         }
+        .planner-stage {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+        }
+        .planner-stage::before {
+            content: '';
+            position: absolute;
+            width: 20rem;
+            height: 20rem;
+            border-radius: 9999px;
+            right: -10rem;
+            top: -12rem;
+            background: radial-gradient(circle, rgba(217, 70, 239, 0.12), transparent 68%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        .planner-input, .planner-button {
+            min-height: 2.75rem;
+        }
+        .planner-button {
+            transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+        }
+        .planner-button:hover { transform: translateY(-1px); }
+        .planner-button:active { transform: translateY(1px) scale(0.98); }
+        .planner-button:focus-visible, .planner-input:focus-visible {
+            outline: 2px solid #22d3ee;
+            outline-offset: 2px;
+        }
+        .planner-stat {
+            transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), background-color 220ms ease, border-color 220ms ease;
+        }
+        .planner-stat.metric-flash {
+            transform: translateY(-2px);
+            border-color: rgba(34, 211, 238, 0.65);
+            background-color: rgba(8, 47, 73, 0.42);
+        }
+        .planner-details summary { list-style: none; }
+        .planner-details summary::-webkit-details-marker { display: none; }
+        .planner-details[open] .planner-chevron { transform: rotate(180deg); }
+        .planner-chevron { transition: transform 180ms ease; }
+        @keyframes plannerPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(217, 70, 239, 0); }
+            50% { box-shadow: 0 0 0 8px rgba(217, 70, 239, 0.08); }
+        }
+        .planner-live { animation: plannerPulse 2.8s ease-in-out infinite; }
+        @media (max-width: 640px) {
+            .planner-input { font-size: 1rem; }
+            .planner-input option { font-size: 0.875rem; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col items-center pb-12 px-4 sm:px-6 selection:bg-cyan-500/30 selection:text-cyan-200">
@@ -414,28 +467,45 @@
                 </div>
             </div>
 
-            <!-- Training Planner: model recommendation and epoch runtime estimator -->
-            <section class="glass-card rounded-3xl p-6 sm:p-7 animate-reveal" style="animation-delay: 360ms;">
-                <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-6">
+            <!-- Training Planner V2: interactive capacity planning workspace -->
+            <section class="planner-stage glass-card rounded-3xl p-4 sm:p-7 animate-reveal" style="animation-delay: 360ms;" aria-labelledby="trainingPlannerTitle">
+                <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-5">
                     <div>
-                        <div class="flex items-center gap-2.5">
+                        <div class="flex flex-wrap items-center gap-2.5">
                             <span class="p-2 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-300">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m5-2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </span>
-                            <h2 class="font-display text-xl font-bold text-white">AI Training Planner</h2>
+                            <h2 id="trainingPlannerTitle" class="font-display text-xl font-bold text-white">AI Training Planner</h2>
+                            <span class="planner-live text-[10px] font-mono font-bold tracking-wider uppercase px-2 py-1 rounded-md bg-fuchsia-500/15 text-fuchsia-200 border border-fuchsia-400/30">Version 2.0</span>
                         </div>
                         <p class="text-xs text-slate-400 mt-2 max-w-2xl leading-relaxed">
-                            Choose a model and workload to estimate training steps, epoch time, and practical hardware needs. Estimates are planning ranges—not a replacement for a short real training calibration run.
+                            Design a realistic fine-tuning run with model intelligence, effective-batch math, precision, validation, checkpoint, and cloud-cost allowances. This is a planning range—validate it with a short run on your real stack.
                         </p>
                     </div>
-                    <span id="trainingDeviceBadge" class="self-start text-[11px] font-mono px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-300 border border-slate-700">
-                        Run benchmark to calibrate
-                    </span>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span id="trainingDeviceBadge" class="self-start text-[11px] font-mono px-2.5 py-1.5 rounded-lg bg-slate-800/90 text-slate-300 border border-slate-700">
+                            Run benchmark to calibrate
+                        </span>
+                        <button type="button" onclick="copyTrainingPlan()" class="planner-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900/80 hover:border-cyan-500/50 text-[11px] font-mono text-slate-200" aria-label="Copy current training plan">
+                            <svg class="w-3.5 h-3.5 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            <span id="copyPlanText">Copy plan</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                <div class="mb-5 flex flex-col sm:flex-row sm:items-center gap-2.5 rounded-2xl border border-slate-800/80 bg-slate-950/40 p-3">
+                    <span class="shrink-0 text-[10px] font-mono uppercase tracking-wider text-slate-500">Quick starts</span>
+                    <div class="grid grid-cols-1 xs:grid-cols-3 sm:flex gap-2 w-full sm:w-auto">
+                        <button type="button" onclick="applyTrainingPreset('pilot')" class="planner-button text-left sm:text-center px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900/75 hover:border-emerald-400/60 text-xs text-emerald-200">Pilot <span class="text-slate-500">· small &amp; safe</span></button>
+                        <button type="button" onclick="applyTrainingPreset('balanced')" class="planner-button text-left sm:text-center px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900/75 hover:border-cyan-400/60 text-xs text-cyan-200">Balanced <span class="text-slate-500">· 1 GPU</span></button>
+                        <button type="button" onclick="applyTrainingPreset('scale')" class="planner-button text-left sm:text-center px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900/75 hover:border-violet-400/60 text-xs text-violet-200">Scale out <span class="text-slate-500">· multi-device</span></button>
+                    </div>
+                    <span id="presetStatus" class="sm:ml-auto text-[10px] font-mono text-slate-500" aria-live="polite">Choose a starting point or tune every field.</span>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6">
                     <div class="xl:col-span-5 space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <label class="block">
@@ -445,100 +515,168 @@
                                     <option value="embedding">Embeddings / retrieval</option>
                                     <option value="vision">Image classification</option>
                                     <option value="speech">Speech fine-tuning</option>
-                                    <option value="llm">LLM LoRA / QLoRA</option>
+                                    <option value="llm">LLM instruction tuning</option>
                                 </select>
                             </label>
                             <label class="block">
-                                <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Recommended base model</span>
-                                <select id="trainingModel" class="planner-input" onchange="updateTrainingPlanner()"></select>
+                                <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Base model</span>
+                                <select id="trainingModel" class="planner-input" onchange="syncTrainingStrategy(); updateTrainingPlanner()"></select>
                             </label>
                         </div>
 
+                        <div id="modelAtAGlance" class="rounded-2xl border border-cyan-500/15 bg-cyan-500/[0.035] p-3.5" aria-live="polite">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <div id="modelAtAGlanceTitle" class="font-medium text-sm text-slate-100">Choose a model</div>
+                                    <p id="modelAtAGlanceText" class="mt-1 text-[11px] leading-relaxed text-slate-400">The planner will tailor its recommendation and memory range.</p>
+                                </div>
+                                <span id="modelAtAGlanceTag" class="shrink-0 px-2 py-1 rounded-md bg-slate-900 text-[10px] font-mono text-cyan-300 border border-slate-700">MODEL</span>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <label class="block col-span-2 sm:col-span-1">
-                                <span id="samplesLabel" class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Examples</span>
+                            <label class="block col-span-2">
+                                <span id="samplesLabel" class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Training records</span>
                                 <input id="trainingSamples" class="planner-input" type="number" min="1" max="100000000" value="10000" inputmode="numeric" oninput="updateTrainingPlanner()">
                             </label>
-                            <label class="block col-span-1">
+                            <label class="block">
+                                <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Validation %</span>
+                                <input id="trainingValidation" class="planner-input" type="number" min="0" max="50" value="10" inputmode="decimal" oninput="updateTrainingPlanner()">
+                            </label>
+                            <label class="block">
                                 <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Epochs</span>
                                 <input id="trainingEpochs" class="planner-input" type="number" min="1" max="1000" value="3" inputmode="numeric" oninput="updateTrainingPlanner()">
                             </label>
-                            <label class="block col-span-1">
-                                <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Batch size</span>
+                            <label class="block">
+                                <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Micro batch</span>
                                 <input id="trainingBatch" class="planner-input" type="number" min="1" max="4096" value="32" inputmode="numeric" oninput="updateTrainingPlanner()">
                             </label>
-                            <label class="block col-span-2 sm:col-span-1">
-                                <span id="unitLabel" class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Tokens / example</span>
+                            <label class="block">
+                                <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Grad. accum.</span>
+                                <input id="trainingAccumulation" class="planner-input" type="number" min="1" max="256" value="1" inputmode="numeric" oninput="updateTrainingPlanner()">
+                            </label>
+                            <label class="block">
+                                <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Devices</span>
+                                <input id="trainingDevices" class="planner-input" type="number" min="1" max="128" value="1" inputmode="numeric" oninput="updateTrainingPlanner()">
+                            </label>
+                            <label class="block">
+                                <span id="unitLabel" class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Tokens / record</span>
                                 <input id="trainingUnit" class="planner-input" type="number" min="1" max="100000" value="128" inputmode="numeric" oninput="updateTrainingPlanner()">
                             </label>
                         </div>
 
+                        <details class="planner-details rounded-2xl border border-slate-800/80 bg-slate-950/45" open>
+                            <summary class="flex items-center justify-between gap-3 cursor-pointer p-4 text-sm font-medium text-slate-200">
+                                <span class="flex items-center gap-2"><span class="w-5 h-5 rounded-md bg-violet-500/10 border border-violet-500/20 text-violet-300 inline-flex items-center justify-center text-xs">+</span> Advanced run controls</span>
+                                <svg class="planner-chevron h-4 w-4 text-slate-500" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 7.5 5 5 5-5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                            </summary>
+                            <div class="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-slate-800/80 pt-4">
+                                <label class="block">
+                                    <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Tuning strategy</span>
+                                    <select id="trainingStrategy" class="planner-input" onchange="updateTrainingPlanner()">
+                                        <option value="auto">Recommended for model</option>
+                                        <option value="full">Full fine-tune</option>
+                                        <option value="lora">LoRA / adapters</option>
+                                        <option value="qlora">QLoRA / 4-bit base</option>
+                                    </select>
+                                </label>
+                                <label class="block">
+                                    <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Compute precision</span>
+                                    <select id="trainingPrecision" class="planner-input" onchange="updateTrainingPlanner()">
+                                        <option value="bf16">BF16 / mixed precision</option>
+                                        <option value="fp16">FP16 mixed precision</option>
+                                        <option value="fp32">FP32</option>
+                                        <option value="int4">4-bit base + adapters</option>
+                                    </select>
+                                </label>
+                                <label class="block">
+                                    <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Data-pipeline efficiency %</span>
+                                    <input id="trainingPipeline" class="planner-input" type="number" min="40" max="100" value="85" inputmode="numeric" oninput="updateTrainingPlanner()">
+                                </label>
+                                <label class="block">
+                                    <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Evaluate every updates</span>
+                                    <input id="trainingEvalEvery" class="planner-input" type="number" min="1" max="1000000" value="250" inputmode="numeric" oninput="updateTrainingPlanner()">
+                                </label>
+                                <label class="block">
+                                    <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Checkpoint every updates</span>
+                                    <input id="trainingCheckpointEvery" class="planner-input" type="number" min="1" max="1000000" value="500" inputmode="numeric" oninput="updateTrainingPlanner()">
+                                </label>
+                                <label class="block">
+                                    <span class="block mb-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400">Accelerator rate / hr (USD)</span>
+                                    <input id="trainingCloudRate" class="planner-input" type="number" min="0" max="10000" step="0.01" value="0" inputmode="decimal" oninput="updateTrainingPlanner()">
+                                </label>
+                            </div>
+                        </details>
+
                         <div class="rounded-2xl p-4 bg-slate-950/55 border border-slate-800/80">
                             <div class="flex items-start gap-3">
-                                <svg class="w-4 h-4 mt-0.5 shrink-0 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <p id="trainingRouteNote" class="text-xs text-slate-400 leading-relaxed">
-                                    Run the device benchmark to tailor the estimate to your browser's measured compute performance.
-                                </p>
+                                <svg class="w-4 h-4 mt-0.5 shrink-0 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <p id="trainingRouteNote" class="text-xs text-slate-400 leading-relaxed">Run the device benchmark to tailor the estimate to your browser's measured compute performance.</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="xl:col-span-4 rounded-2xl bg-gradient-to-br from-fuchsia-500/10 via-slate-950/50 to-cyan-500/10 border border-fuchsia-500/20 p-5 flex flex-col justify-between gap-5">
+                    <div class="xl:col-span-4 rounded-2xl bg-gradient-to-br from-fuchsia-500/10 via-slate-950/70 to-cyan-500/10 border border-fuchsia-500/20 p-4 sm:p-5 flex flex-col gap-5" aria-live="polite">
                         <div>
-                            <div class="text-[11px] font-mono uppercase tracking-wider text-fuchsia-200">Estimated wall-clock runtime</div>
-                            <div id="epochEstimate" class="font-display text-3xl font-bold text-white mt-2">—</div>
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="text-[11px] font-mono uppercase tracking-wider text-fuchsia-200">Estimated wall-clock runtime</div>
+                                <span id="planConfidence" class="text-[10px] font-mono px-2 py-1 rounded-md border border-slate-700 bg-slate-900/70 text-slate-300">Planning range</span>
+                            </div>
+                            <div id="epochEstimate" class="font-display text-3xl sm:text-4xl font-bold text-white mt-2 tracking-tight">—</div>
                             <p id="epochEstimateDetail" class="text-xs text-slate-400 mt-1.5 leading-relaxed">Select a workload to see per-epoch and full-run planning ranges.</p>
                         </div>
-                        <div class="grid grid-cols-2 gap-3 text-xs">
-                            <div class="rounded-xl bg-slate-950/65 border border-slate-800/80 p-3">
-                                <div class="text-slate-500">Steps / epoch</div>
+                        <div class="grid grid-cols-2 gap-2.5 text-xs">
+                            <div class="planner-stat rounded-xl bg-slate-950/65 border border-slate-800/80 p-3">
+                                <div class="text-slate-500">Update steps / epoch</div>
                                 <div id="stepsPerEpoch" class="font-mono font-semibold text-cyan-300 mt-1">—</div>
                             </div>
-                            <div class="rounded-xl bg-slate-950/65 border border-slate-800/80 p-3">
-                                <div class="text-slate-500">Target accelerator</div>
-                                <div id="trainingAccelerator" class="font-mono font-semibold text-cyan-300 mt-1">—</div>
+                            <div class="planner-stat rounded-xl bg-slate-950/65 border border-slate-800/80 p-3">
+                                <div class="text-slate-500">Effective global batch</div>
+                                <div id="effectiveBatch" class="font-mono font-semibold text-cyan-300 mt-1">—</div>
                             </div>
+                            <div class="planner-stat rounded-xl bg-slate-950/65 border border-slate-800/80 p-3">
+                                <div class="text-slate-500">Training volume</div>
+                                <div id="trainingVolume" class="font-mono font-semibold text-emerald-300 mt-1">—</div>
+                            </div>
+                            <div class="planner-stat rounded-xl bg-slate-950/65 border border-slate-800/80 p-3">
+                                <div class="text-slate-500">Compute budget</div>
+                                <div id="trainingCost" class="font-mono font-semibold text-emerald-300 mt-1">—</div>
+                            </div>
+                        </div>
+                        <div class="rounded-xl border border-slate-800/80 bg-slate-950/55 p-3">
+                            <div class="flex items-center justify-between gap-3 text-[11px]">
+                                <span class="font-mono uppercase tracking-wider text-slate-500">Run readiness</span>
+                                <span id="trainingReadiness" class="font-mono font-semibold text-amber-300">Checking fit…</span>
+                            </div>
+                            <p id="trainingReadinessDetail" class="mt-1.5 text-xs leading-relaxed text-slate-400">Model and memory guidance will update as you configure the run.</p>
                         </div>
                     </div>
 
-                    <aside class="xl:col-span-3 rounded-2xl bg-slate-950/55 border border-slate-800/80 p-5">
-                        <h3 class="font-display text-base font-bold text-slate-100">Training fit</h3>
-                        <dl class="mt-3 space-y-3 text-xs">
-                            <div class="flex items-start justify-between gap-3">
-                                <dt class="text-slate-500">Method</dt>
-                                <dd id="trainingMethod" class="font-mono text-right text-slate-200">—</dd>
+                    <aside class="xl:col-span-3 rounded-2xl bg-slate-950/55 border border-slate-800/80 p-4 sm:p-5">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <div class="text-[10px] font-mono uppercase tracking-wider text-slate-500">Model intelligence</div>
+                                <h3 id="trainingModelName" class="font-display text-base font-bold text-slate-100 mt-1">Selected model</h3>
                             </div>
-                            <div class="flex items-start justify-between gap-3">
-                                <dt class="text-slate-500">Approx. accelerator memory</dt>
-                                <dd id="trainingVram" class="font-mono text-right text-slate-200">—</dd>
-                            </div>
-                            <div class="flex items-start justify-between gap-3">
-                                <dt class="text-slate-500">Download / base weights</dt>
-                                <dd id="trainingDownload" class="font-mono text-right text-slate-200">—</dd>
-                            </div>
-                            <div class="pt-3 border-t border-slate-800/80">
-                                <dt class="text-slate-500 mb-1.5">Use it for</dt>
-                                <dd id="trainingUseCase" class="text-slate-300 leading-relaxed">—</dd>
-                            </div>
+                            <a id="modelInfoLink" href="#" target="_blank" rel="noopener noreferrer" class="planner-button inline-flex items-center gap-1 shrink-0 rounded-lg border border-slate-700 px-2 py-1.5 text-[10px] font-mono text-cyan-300 hover:border-cyan-400/60" aria-label="Open official model information">Card ↗</a>
+                        </div>
+                        <dl class="mt-4 space-y-3 text-xs">
+                            <div class="flex items-start justify-between gap-3"><dt class="text-slate-500">Parameters</dt><dd id="trainingParams" class="font-mono text-right text-slate-200">—</dd></div>
+                            <div class="flex items-start justify-between gap-3"><dt class="text-slate-500">Family / modality</dt><dd id="trainingFamily" class="font-mono text-right text-slate-200">—</dd></div>
+                            <div class="flex items-start justify-between gap-3"><dt class="text-slate-500">Context / input</dt><dd id="trainingContext" class="font-mono text-right text-slate-200">—</dd></div>
+                            <div class="flex items-start justify-between gap-3"><dt class="text-slate-500">Suggested strategy</dt><dd id="trainingMethod" class="font-mono text-right text-slate-200">—</dd></div>
+                            <div class="flex items-start justify-between gap-3"><dt class="text-slate-500">Approx. accelerator memory</dt><dd id="trainingVram" class="font-mono text-right text-slate-200">—</dd></div>
+                            <div class="flex items-start justify-between gap-3"><dt class="text-slate-500">Base weights</dt><dd id="trainingDownload" class="font-mono text-right text-slate-200">—</dd></div>
+                            <div class="pt-3 border-t border-slate-800/80"><dt class="text-slate-500 mb-1.5">Best when</dt><dd id="trainingUseCase" class="text-slate-300 leading-relaxed">—</dd></div>
+                            <div><dt class="text-slate-500 mb-1.5">Data note</dt><dd id="trainingDataGuidance" class="text-slate-400 leading-relaxed">—</dd></div>
                         </dl>
                     </aside>
                 </div>
 
-                <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                    <div class="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4">
-                        <div class="font-medium text-emerald-300">Best browser use</div>
-                        <p class="text-slate-400 mt-1.5 leading-relaxed">Use this device for inference, data review, embeddings, and evaluation. Browser GPU limits do not equal installed VRAM.</p>
-                    </div>
-                    <div class="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4">
-                        <div class="font-medium text-cyan-300">For a dependable estimate</div>
-                        <p class="text-slate-400 mt-1.5 leading-relaxed">Run 50–100 optimizer steps with your real data, then multiply median step time by the planner's step count.</p>
-                    </div>
-                    <div class="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4">
-                        <div class="font-medium text-violet-300">Before a long run</div>
-                        <p class="text-slate-400 mt-1.5 leading-relaxed">Reserve validation and checkpoint time, monitor memory headroom, and start with LoRA rather than full tuning for large LLMs.</p>
-                    </div>
+                <div class="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div class="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4"><div class="font-medium text-emerald-300">Browser boundary</div><p class="text-slate-400 mt-1.5 leading-relaxed">Use this device for planning, inference, data review, and evaluation. Browser buffer limits do not report installed GPU VRAM.</p></div>
+                    <div class="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4"><div class="font-medium text-cyan-300">Calibration loop</div><p class="text-slate-400 mt-1.5 leading-relaxed">Run 50–100 real optimizer updates, use the median time, then compare it with this run budget before committing spend.</p></div>
+                    <div class="rounded-2xl border border-slate-800/80 bg-slate-950/40 p-4"><div class="font-medium text-violet-300">Before scale-out</div><p class="text-slate-400 mt-1.5 leading-relaxed">Keep a held-out set, checkpoint early, watch memory headroom, and review the model card and licence before production use.</p></div>
                 </div>
             </section>
 
@@ -559,84 +697,34 @@
         let trainingPlannerTelemetry = null;
         let latestTrainingEstimate = null;
 
-        // Planning profiles use conservative reference step times at roughly 1 TFLOPS of usable
-        // accelerator throughput. They are intentionally presented as ranges: input pipelines,
-        // precision, framework kernels, validation, and checkpointing vary substantially by setup.
+        // V2 profiles use conservative reference step times at roughly 1 TFLOPS of usable accelerator
+        // throughput. Model cards change over time: follow the linked card for licence and release-specific details.
         const TRAINING_PROFILES = [
-            {
-                id: 'distilbert', task: 'text', name: 'DistilBERT base uncased',
-                parameters: '67M parameters', method: 'Full fine-tune', vram: '6–8 GB', download: '~270 MB',
-                useCase: 'Intent classification, sentiment, NER, and other supervised text tasks.',
-                baseStepMs: 34, referenceBatch: 32, referenceUnit: 128
-            },
-            {
-                id: 'modernbert', task: 'text', name: 'ModernBERT-base',
-                parameters: '149M parameters', method: 'Full fine-tune or LoRA', vram: '10–12 GB', download: '~600 MB',
-                useCase: 'Higher-quality classification and long-context text adaptation.',
-                baseStepMs: 68, referenceBatch: 16, referenceUnit: 256
-            },
-            {
-                id: 'bge-small', task: 'embedding', name: 'BGE-small-en-v1.5',
-                parameters: '33M parameters', method: 'Contrastive fine-tune', vram: '6–8 GB', download: '~130 MB',
-                useCase: 'Semantic search, reranking experiments, and RAG retrieval.',
-                baseStepMs: 46, referenceBatch: 32, referenceUnit: 128
-            },
-            {
-                id: 'e5-base', task: 'embedding', name: 'E5-base-v2',
-                parameters: '109M parameters', method: 'Contrastive fine-tune', vram: '8–12 GB', download: '~440 MB',
-                useCase: 'Higher-recall dense retrieval using query / passage pairs.',
-                baseStepMs: 92, referenceBatch: 16, referenceUnit: 256
-            },
-            {
-                id: 'mobilenet', task: 'vision', name: 'MobileNetV3-Small',
-                parameters: '2.5M parameters', method: 'Full fine-tune', vram: '4–6 GB', download: '~10 MB',
-                useCase: 'Mobile-friendly image classification and visual quality checks.',
-                baseStepMs: 36, referenceBatch: 32, referenceUnit: 224
-            },
-            {
-                id: 'vit-base', task: 'vision', name: 'ViT-Base Patch16-224',
-                parameters: '86M parameters', method: 'Linear probe → fine-tune', vram: '10–16 GB', download: '~330 MB',
-                useCase: 'Higher-accuracy image classification when a GPU is available.',
-                baseStepMs: 130, referenceBatch: 16, referenceUnit: 224
-            },
-            {
-                id: 'whisper-tiny', task: 'speech', name: 'Whisper Tiny',
-                parameters: '39M parameters', method: 'LoRA / supervised fine-tune', vram: '8–10 GB', download: '~150 MB',
-                useCase: 'Domain vocabulary, accents, and short command transcription.',
-                baseStepMs: 260, referenceBatch: 8, referenceUnit: 15
-            },
-            {
-                id: 'whisper-base', task: 'speech', name: 'Whisper Base',
-                parameters: '74M parameters', method: 'LoRA / supervised fine-tune', vram: '12–16 GB', download: '~290 MB',
-                useCase: 'Better speech accuracy for domain-specific audio datasets.',
-                baseStepMs: 480, referenceBatch: 4, referenceUnit: 15
-            },
-            {
-                id: 'qwen-1.5b', task: 'llm', name: 'Qwen2.5-1.5B-Instruct',
-                parameters: '1.5B parameters', method: 'QLoRA (4-bit base)', vram: '8–12 GB', download: '~1.2 GB (4-bit)',
-                useCase: 'Small assistant, extraction, classification, and structured-output tuning.',
-                baseStepMs: 1450, referenceBatch: 1, referenceUnit: 512
-            },
-            {
-                id: 'llama-3b', task: 'llm', name: 'Llama 3.2 3B Instruct',
-                parameters: '3B parameters', method: 'QLoRA (4-bit base)', vram: '12–16 GB', download: '~2.0 GB (4-bit)',
-                useCase: 'More capable local assistant and instruction-following fine-tuning.',
-                baseStepMs: 2850, referenceBatch: 1, referenceUnit: 512
-            },
-            {
-                id: 'qwen-7b', task: 'llm', name: 'Qwen2.5-7B-Instruct',
-                parameters: '7B parameters', method: 'QLoRA (4-bit base)', vram: '18–24 GB', download: '~4.6 GB (4-bit)',
-                useCase: 'Higher-quality domain assistant when a larger local or cloud GPU is available.',
-                baseStepMs: 5900, referenceBatch: 1, referenceUnit: 512
-            }
+            { id: 'distilbert', task: 'text', name: 'DistilBERT base uncased', parameters: '67M', family: 'Distilled encoder · text', input: 'Up to 512 tokens', method: 'Full fine-tune', defaultStrategy: 'full', memoryGb: 6, download: '~270 MB', useCase: 'Fast intent, sentiment, NER, and baseline classification.', dataGuidance: 'A strong baseline from a few thousand labeled examples; balance labels before adding epochs.', card: 'https://huggingface.co/docs/transformers/en/model_doc/distilbert', baseStepMs: 34, referenceBatch: 32, referenceUnit: 128 },
+            { id: 'deberta-v3', task: 'text', name: 'DeBERTa-v3-base', parameters: '184M', family: 'Disentangled encoder · text', input: 'Up to 512 tokens', method: 'Full fine-tune or LoRA', defaultStrategy: 'full', memoryGb: 10, download: '~740 MB', useCase: 'Higher-accuracy classification, extraction, and NLU benchmarks.', dataGuidance: 'Most useful when labels are clean and the task merits a stronger encoder than a distilled baseline.', card: 'https://huggingface.co/microsoft/deberta-v3-base', baseStepMs: 84, referenceBatch: 16, referenceUnit: 256 },
+            { id: 'modernbert', task: 'text', name: 'ModernBERT-base', parameters: '149M', family: 'Modern encoder · text', input: 'Long-context capable', method: 'Full fine-tune or LoRA', defaultStrategy: 'lora', memoryGb: 10, download: '~600 MB', useCase: 'Higher-quality classification and longer-document adaptation.', dataGuidance: 'Keep document truncation visible in your evaluation; long sequences increase compute rapidly.', card: 'https://huggingface.co/answerdotai/ModernBERT-base', baseStepMs: 68, referenceBatch: 16, referenceUnit: 256 },
+            { id: 'bge-small', task: 'embedding', name: 'BGE-small-en-v1.5', parameters: '33M', family: 'Bi-encoder · embeddings', input: 'Short passage pairs', method: 'Contrastive fine-tune', defaultStrategy: 'full', memoryGb: 6, download: '~130 MB', useCase: 'Compact semantic search, RAG retrieval, and embedding experiments.', dataGuidance: 'Use query–positive pairs plus hard negatives; retrieval quality relies more on pair quality than epoch count.', card: 'https://huggingface.co/BAAI/bge-small-en-v1.5', baseStepMs: 46, referenceBatch: 32, referenceUnit: 128 },
+            { id: 'bge-base', task: 'embedding', name: 'BGE-base-en-v1.5', parameters: '109M', family: 'Bi-encoder · embeddings', input: 'Short passage pairs', method: 'Contrastive fine-tune', defaultStrategy: 'full', memoryGb: 8, download: '~440 MB', useCase: 'Higher-quality domain retrieval and RAG index refreshes.', dataGuidance: 'Start with 5–20 hard negatives per query when available; hold out queries, not just chunks.', card: 'https://huggingface.co/BAAI/bge-base-en-v1.5', baseStepMs: 88, referenceBatch: 16, referenceUnit: 256 },
+            { id: 'e5-base', task: 'embedding', name: 'E5-base-v2', parameters: '109M', family: 'Bi-encoder · embeddings', input: 'Query / passage pairs', method: 'Contrastive fine-tune', defaultStrategy: 'full', memoryGb: 8, download: '~440 MB', useCase: 'General-purpose dense retrieval with query and passage prompts.', dataGuidance: 'Preserve the query/passage prefix convention in both training and evaluation.', card: 'https://huggingface.co/intfloat/e5-base-v2', baseStepMs: 92, referenceBatch: 16, referenceUnit: 256 },
+            { id: 'mobilenet', task: 'vision', name: 'MobileNetV3-Small', parameters: '2.5M', family: 'Mobile CNN · vision', input: '224 × 224 px', method: 'Full fine-tune', defaultStrategy: 'full', memoryGb: 4, download: '~10 MB', useCase: 'Mobile-friendly image classification and rapid visual QA.', dataGuidance: 'Use class-balanced augmentation and reserve images from distinct capture sessions for validation.', card: 'https://pytorch.org/vision/stable/models/mobilenetv3.html', baseStepMs: 36, referenceBatch: 32, referenceUnit: 224 },
+            { id: 'efficientnet', task: 'vision', name: 'EfficientNet-B0', parameters: '5.3M', family: 'Efficient CNN · vision', input: '224 × 224 px', method: 'Full fine-tune', defaultStrategy: 'full', memoryGb: 5, download: '~21 MB', useCase: 'Efficient image classification with a stronger accuracy/size trade-off.', dataGuidance: 'Check performance by class and camera/source to catch distribution shift.', card: 'https://pytorch.org/vision/stable/models/efficientnet.html', baseStepMs: 49, referenceBatch: 32, referenceUnit: 224 },
+            { id: 'vit-base', task: 'vision', name: 'ViT-Base Patch16-224', parameters: '86M', family: 'Vision Transformer · vision', input: '224 × 224 px', method: 'Linear probe → fine-tune', defaultStrategy: 'lora', memoryGb: 10, download: '~330 MB', useCase: 'Higher-accuracy image classification when a GPU is available.', dataGuidance: 'A few thousand diverse images is a safer start; inspect augmentation and label consistency.', card: 'https://huggingface.co/google/vit-base-patch16-224', baseStepMs: 130, referenceBatch: 16, referenceUnit: 224 },
+            { id: 'whisper-tiny', task: 'speech', name: 'Whisper Tiny', parameters: '39M', family: 'Encoder-decoder · speech', input: 'Audio seconds / clip', method: 'LoRA / supervised fine-tune', defaultStrategy: 'lora', memoryGb: 8, download: '~150 MB', useCase: 'Domain vocabulary, accents, and short command transcription.', dataGuidance: 'Normalize transcripts and hold out speakers, not random clips, to measure generalization.', card: 'https://huggingface.co/openai/whisper-tiny', baseStepMs: 260, referenceBatch: 8, referenceUnit: 15 },
+            { id: 'whisper-base', task: 'speech', name: 'Whisper Base', parameters: '74M', family: 'Encoder-decoder · speech', input: 'Audio seconds / clip', method: 'LoRA / supervised fine-tune', defaultStrategy: 'lora', memoryGb: 12, download: '~290 MB', useCase: 'Better speech accuracy for domain-specific audio datasets.', dataGuidance: 'Segment very long recordings consistently; audio duration has a direct impact on memory and time.', card: 'https://huggingface.co/openai/whisper-base', baseStepMs: 480, referenceBatch: 4, referenceUnit: 15 },
+            { id: 'whisper-small', task: 'speech', name: 'Whisper Small', parameters: '244M', family: 'Encoder-decoder · speech', input: 'Audio seconds / clip', method: 'LoRA / supervised fine-tune', defaultStrategy: 'lora', memoryGb: 16, download: '~970 MB', useCase: 'More capable domain ASR when a higher-memory accelerator is available.', dataGuidance: 'Use speaker-separated evaluation and inspect word error rate by noisy and quiet conditions.', card: 'https://huggingface.co/openai/whisper-small', baseStepMs: 1050, referenceBatch: 2, referenceUnit: 15 },
+            { id: 'qwen-1.5b', task: 'llm', name: 'Qwen2.5-1.5B-Instruct', parameters: '1.5B', family: 'Decoder-only LLM · text', input: 'Long-context instruction pairs', method: 'QLoRA (4-bit base)', defaultStrategy: 'qlora', memoryGb: 8, download: '~1.2 GB (4-bit)', useCase: 'Small assistant, extraction, classification, and structured-output tuning.', dataGuidance: 'Use high-quality prompt/response pairs with a held-out task suite—not only loss—as the target.', card: 'https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct', baseStepMs: 1450, referenceBatch: 1, referenceUnit: 512 },
+            { id: 'gemma-2-2b', task: 'llm', name: 'Gemma 2 2B', parameters: '2.6B', family: 'Decoder-only LLM · text', input: 'Instruction / chat turns', method: 'QLoRA (4-bit base)', defaultStrategy: 'qlora', memoryGb: 10, download: '~1.7 GB (4-bit)', useCase: 'Compact instruction following and domain-specific assistant experiments.', dataGuidance: 'Review the model terms and use a consistent chat template throughout train and evaluation.', card: 'https://huggingface.co/google/gemma-2-2b-it', baseStepMs: 2150, referenceBatch: 1, referenceUnit: 512 },
+            { id: 'llama-3b', task: 'llm', name: 'Llama 3.2 3B Instruct', parameters: '3B', family: 'Decoder-only LLM · text', input: 'Instruction / chat turns', method: 'QLoRA (4-bit base)', defaultStrategy: 'qlora', memoryGb: 12, download: '~2.0 GB (4-bit)', useCase: 'A more capable local assistant and instruction-following fine-tune.', dataGuidance: 'Use a task-specific held-out set and preserve the expected Llama chat format.', card: 'https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct', baseStepMs: 2850, referenceBatch: 1, referenceUnit: 512 },
+            { id: 'mistral-7b', task: 'llm', name: 'Mistral 7B Instruct v0.3', parameters: '7B', family: 'Decoder-only LLM · text', input: 'Instruction / chat turns', method: 'QLoRA (4-bit base)', defaultStrategy: 'qlora', memoryGb: 18, download: '~4.1 GB (4-bit)', useCase: 'Higher-capacity instruction tuning on a capable local or cloud GPU.', dataGuidance: 'Keep sequence packing, chat template, and safety evaluation explicit before a long run.', card: 'https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3', baseStepMs: 5650, referenceBatch: 1, referenceUnit: 512 },
+            { id: 'qwen-7b', task: 'llm', name: 'Qwen2.5-7B-Instruct', parameters: '7B', family: 'Decoder-only LLM · text', input: 'Long-context instruction pairs', method: 'QLoRA (4-bit base)', defaultStrategy: 'qlora', memoryGb: 18, download: '~4.6 GB (4-bit)', useCase: 'Higher-quality domain assistant, extraction, and structured outputs.', dataGuidance: 'Use a disciplined schema/task evaluation set; long examples can dominate the compute budget.', card: 'https://huggingface.co/Qwen/Qwen2.5-7B-Instruct', baseStepMs: 5900, referenceBatch: 1, referenceUnit: 512 }
         ];
 
         const TRAINING_TASK_DEFAULTS = {
-            text: { samples: 10000, epochs: 3, batch: 32, unit: 128, samplesLabel: 'Text examples', unitLabel: 'Tokens / example' },
-            embedding: { samples: 30000, epochs: 3, batch: 32, unit: 128, samplesLabel: 'Pairs / examples', unitLabel: 'Tokens / item' },
-            vision: { samples: 5000, epochs: 5, batch: 32, unit: 224, samplesLabel: 'Training images', unitLabel: 'Image side (px)' },
-            speech: { samples: 2000, epochs: 5, batch: 8, unit: 15, samplesLabel: 'Audio clips', unitLabel: 'Audio sec / clip' },
-            llm: { samples: 5000, epochs: 3, batch: 1, unit: 512, samplesLabel: 'Prompt / response pairs', unitLabel: 'Tokens / example' }
+            text: { samples: 10000, validation: 10, epochs: 3, batch: 32, accumulation: 1, devices: 1, unit: 128, precision: 'bf16', strategy: 'auto', pipeline: 85, evalEvery: 250, checkpointEvery: 500, samplesLabel: 'Text records', unitLabel: 'Tokens / record' },
+            embedding: { samples: 30000, validation: 10, epochs: 3, batch: 32, accumulation: 1, devices: 1, unit: 128, precision: 'bf16', strategy: 'auto', pipeline: 85, evalEvery: 500, checkpointEvery: 1000, samplesLabel: 'Query / passage pairs', unitLabel: 'Tokens / item' },
+            vision: { samples: 5000, validation: 15, epochs: 8, batch: 32, accumulation: 1, devices: 1, unit: 224, precision: 'bf16', strategy: 'auto', pipeline: 80, evalEvery: 250, checkpointEvery: 500, samplesLabel: 'Training images', unitLabel: 'Image side (px)' },
+            speech: { samples: 2000, validation: 12, epochs: 5, batch: 8, accumulation: 1, devices: 1, unit: 15, precision: 'bf16', strategy: 'auto', pipeline: 70, evalEvery: 100, checkpointEvery: 250, samplesLabel: 'Audio clips', unitLabel: 'Audio sec / clip' },
+            llm: { samples: 5000, validation: 5, epochs: 2, batch: 1, accumulation: 8, devices: 1, unit: 512, precision: 'int4', strategy: 'auto', pipeline: 82, evalEvery: 100, checkpointEvery: 250, samplesLabel: 'Prompt / response pairs', unitLabel: 'Tokens / record' }
         };
 
         function setProgress(percent, text) {
@@ -844,9 +932,30 @@
             return `${mb.toFixed(0)} MB`;
         }
 
-        function numberFromInput(id, fallback, min = 1) {
+        function numberFromInput(id, fallback, min = 1, max = Number.POSITIVE_INFINITY) {
             const value = Number(document.getElementById(id)?.value);
-            return Number.isFinite(value) && value >= min ? value : fallback;
+            return Number.isFinite(value) && value >= min && value <= max ? value : fallback;
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function formatCompact(value) {
+            if (!Number.isFinite(value)) return '—';
+            return new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+        }
+
+        function formatBudget(amount) {
+            if (!Number.isFinite(amount) || amount <= 0) return 'Add rate';
+            if (amount < 1) return `$${amount.toFixed(2)}`;
+            if (amount < 1000) return `$${amount.toFixed(0)}`;
+            return `$${formatCompact(amount)}`;
+        }
+
+        function setInputValue(id, value) {
+            const input = document.getElementById(id);
+            if (input) input.value = value;
         }
 
         function formatDuration(seconds) {
@@ -866,6 +975,56 @@
             return safeRatio;
         }
 
+        function selectedTrainingProfile() {
+            const modelId = document.getElementById('trainingModel')?.value;
+            return TRAINING_PROFILES.find(item => item.id === modelId) || TRAINING_PROFILES[0];
+        }
+
+        function getStrategyConfig(profile) {
+            const requested = document.getElementById('trainingStrategy')?.value || 'auto';
+            const strategy = requested === 'auto' ? profile.defaultStrategy : requested;
+            const configs = {
+                full: { id: 'full', label: 'Full fine-tune', time: 1.08, memory: 1.45 },
+                lora: { id: 'lora', label: 'LoRA / adapters', time: 0.86, memory: 0.76 },
+                qlora: { id: 'qlora', label: 'QLoRA / 4-bit base', time: 0.94, memory: 0.58 }
+            };
+            return configs[strategy] || configs[profile.defaultStrategy] || configs.full;
+        }
+
+        function getPrecisionConfig() {
+            const precision = document.getElementById('trainingPrecision')?.value || 'bf16';
+            const configs = {
+                bf16: { label: 'BF16', speed: 1, memory: 1 },
+                fp16: { label: 'FP16', speed: 1.04, memory: 1 },
+                fp32: { label: 'FP32', speed: 0.58, memory: 1.62 },
+                int4: { label: '4-bit base', speed: 0.78, memory: 0.62 }
+            };
+            return configs[precision] || configs.bf16;
+        }
+
+        function updateModelBriefing(profile) {
+            document.getElementById('modelAtAGlanceTitle').textContent = profile.name;
+            document.getElementById('modelAtAGlanceText').textContent = `${profile.family} · ${profile.parameters} parameters · ${profile.input}. ${profile.useCase}`;
+            document.getElementById('modelAtAGlanceTag').textContent = profile.task.toUpperCase();
+            document.getElementById('trainingModelName').textContent = profile.name;
+            document.getElementById('trainingParams').textContent = profile.parameters;
+            document.getElementById('trainingFamily').textContent = profile.family;
+            document.getElementById('trainingContext').textContent = profile.input;
+            document.getElementById('trainingDownload').textContent = profile.download;
+            document.getElementById('trainingUseCase').textContent = profile.useCase;
+            document.getElementById('trainingDataGuidance').textContent = profile.dataGuidance;
+            const link = document.getElementById('modelInfoLink');
+            link.href = profile.card;
+            link.setAttribute('aria-label', `Open the model card for ${profile.name}`);
+        }
+
+        function flashPlannerMetrics() {
+            document.querySelectorAll('.planner-stat').forEach(card => {
+                card.classList.remove('metric-flash');
+                requestAnimationFrame(() => card.classList.add('metric-flash'));
+            });
+        }
+
         function syncTrainingModels() {
             const taskSelect = document.getElementById('trainingTask');
             const modelSelect = document.getElementById('trainingModel');
@@ -882,25 +1041,73 @@
             const defaults = TRAINING_TASK_DEFAULTS[task];
             document.getElementById('samplesLabel').textContent = defaults.samplesLabel;
             document.getElementById('unitLabel').textContent = defaults.unitLabel;
-            document.getElementById('trainingSamples').value = defaults.samples;
-            document.getElementById('trainingEpochs').value = defaults.epochs;
-            document.getElementById('trainingBatch').value = defaults.batch;
-            document.getElementById('trainingUnit').value = defaults.unit;
+            setInputValue('trainingSamples', defaults.samples);
+            setInputValue('trainingValidation', defaults.validation);
+            setInputValue('trainingEpochs', defaults.epochs);
+            setInputValue('trainingBatch', defaults.batch);
+            setInputValue('trainingAccumulation', defaults.accumulation);
+            setInputValue('trainingDevices', defaults.devices);
+            setInputValue('trainingUnit', defaults.unit);
+            setInputValue('trainingStrategy', defaults.strategy);
+            setInputValue('trainingPrecision', defaults.precision);
+            setInputValue('trainingPipeline', defaults.pipeline);
+            setInputValue('trainingEvalEvery', defaults.evalEvery);
+            setInputValue('trainingCheckpointEvery', defaults.checkpointEvery);
+            updateTrainingPlanner();
+        }
+
+        function syncTrainingStrategy() {
+            setInputValue('trainingStrategy', 'auto');
+        }
+
+        function applyTrainingPreset(preset) {
+            const task = document.getElementById('trainingTask')?.value || 'text';
+            const defaults = TRAINING_TASK_DEFAULTS[task];
+            const configs = {
+                pilot: { samples: Math.max(250, Math.min(defaults.samples, 1500)), epochs: 1, devices: 1, accumulation: 1, validation: 15, pipeline: 75, evalEvery: 100, checkpointEvery: 250 },
+                balanced: { samples: defaults.samples, epochs: defaults.epochs, devices: 1, accumulation: defaults.accumulation, validation: defaults.validation, pipeline: defaults.pipeline, evalEvery: defaults.evalEvery, checkpointEvery: defaults.checkpointEvery },
+                scale: { samples: Math.max(defaults.samples, task === 'llm' ? 12000 : 20000), epochs: Math.max(2, defaults.epochs), devices: 4, accumulation: Math.max(1, Math.ceil(defaults.accumulation / 2)), validation: defaults.validation, pipeline: 92, evalEvery: defaults.evalEvery * 2, checkpointEvery: defaults.checkpointEvery * 2 }
+            };
+            const config = configs[preset];
+            if (!config) return;
+            setInputValue('trainingSamples', config.samples);
+            setInputValue('trainingEpochs', config.epochs);
+            setInputValue('trainingDevices', config.devices);
+            setInputValue('trainingAccumulation', config.accumulation);
+            setInputValue('trainingValidation', config.validation);
+            setInputValue('trainingPipeline', config.pipeline);
+            setInputValue('trainingEvalEvery', config.evalEvery);
+            setInputValue('trainingCheckpointEvery', config.checkpointEvery);
+            document.getElementById('presetStatus').textContent = `${preset === 'pilot' ? 'Pilot plan' : preset === 'balanced' ? 'Balanced plan' : 'Scale-out plan'} applied — review the model and cost before running.`;
             updateTrainingPlanner();
         }
 
         function updateTrainingPlanner() {
             const task = document.getElementById('trainingTask')?.value || 'text';
-            const modelId = document.getElementById('trainingModel')?.value;
-            const profile = TRAINING_PROFILES.find(item => item.id === modelId) || TRAINING_PROFILES[0];
+            const profile = selectedTrainingProfile();
             if (!profile) return;
 
             const defaults = TRAINING_TASK_DEFAULTS[task];
             const samples = numberFromInput('trainingSamples', defaults.samples);
+            const validationPct = clamp(numberFromInput('trainingValidation', defaults.validation, 0, 50), 0, 50);
             const epochs = numberFromInput('trainingEpochs', defaults.epochs);
             const batch = numberFromInput('trainingBatch', defaults.batch);
+            const accumulation = numberFromInput('trainingAccumulation', defaults.accumulation);
+            const devices = numberFromInput('trainingDevices', defaults.devices);
             const unit = numberFromInput('trainingUnit', defaults.unit);
-            const stepsPerEpoch = Math.ceil(samples / batch);
+            const pipelineEfficiency = clamp(numberFromInput('trainingPipeline', defaults.pipeline, 40, 100), 40, 100) / 100;
+            const evalEvery = numberFromInput('trainingEvalEvery', defaults.evalEvery);
+            const checkpointEvery = numberFromInput('trainingCheckpointEvery', defaults.checkpointEvery);
+            const cloudRate = numberFromInput('trainingCloudRate', 0, 0, 10000);
+            const trainSamples = Math.max(1, Math.floor(samples * (1 - validationPct / 100)));
+            const validationSamples = Math.max(0, samples - trainSamples);
+            const examplesPerMicroStep = batch * devices;
+            const microStepsPerEpoch = Math.ceil(trainSamples / examplesPerMicroStep);
+            const stepsPerEpoch = Math.ceil(microStepsPerEpoch / accumulation);
+            const totalUpdates = stepsPerEpoch * epochs;
+            const effectiveBatch = examplesPerMicroStep * accumulation;
+            const strategy = getStrategyConfig(profile);
+            const precision = getPrecisionConfig();
 
             const gpuGflops = trainingPlannerTelemetry?.gpuBench?.gflops || 0;
             const cpuGflops = trainingPlannerTelemetry?.cpuBench?.gflops || 0;
@@ -912,51 +1119,124 @@
             const lengthScale = trainingTaskScale(task, unit, profile.referenceUnit);
             const batchScale = Math.pow(Math.max(0.125, Math.min(16, batch / profile.referenceBatch)), 0.72);
             const frameworkOverhead = hasGpuCalibration ? 1.35 : 2.2;
-            const secondsPerStep = (profile.baseStepMs * lengthScale * batchScale * frameworkOverhead) / (usableTflops * 1000);
-            const epochSeconds = stepsPerEpoch * secondsPerStep;
-            const totalSeconds = epochSeconds * epochs;
-            const lowSeconds = totalSeconds * 0.65;
-            const highSeconds = totalSeconds * 2.1;
+            const deviceEfficiency = devices === 1 ? 1 : Math.max(0.62, 0.94 - Math.log2(devices) * 0.045);
+            const distributedSpeedup = devices * deviceEfficiency;
+            const secondsPerMicroStep = (profile.baseStepMs * lengthScale * batchScale * frameworkOverhead * strategy.time) / (usableTflops * 1000 * distributedSpeedup * precision.speed);
+            const computeSeconds = microStepsPerEpoch * epochs * secondsPerMicroStep;
+            const validationMicroSteps = validationSamples ? Math.ceil(validationSamples / examplesPerMicroStep) : 0;
+            const evalEvents = validationSamples ? Math.max(1, Math.ceil(totalUpdates / evalEvery)) : 0;
+            const evaluationSeconds = evalEvents * Math.max(2, validationMicroSteps * secondsPerMicroStep * 0.55);
+            const checkpointEvents = Math.max(1, Math.floor(totalUpdates / checkpointEvery));
+            const plannedMemoryGb = Math.max(2, profile.memoryGb * strategy.memory * precision.memory);
+            const checkpointSeconds = checkpointEvents * Math.min(300, 5 + plannedMemoryGb * 2.1);
+            const dataWaitSeconds = (computeSeconds + evaluationSeconds) * ((1 / pipelineEfficiency) - 1);
+            const totalSeconds = computeSeconds + evaluationSeconds + checkpointSeconds + dataWaitSeconds;
+            const epochSeconds = totalSeconds / epochs;
+            const lowFactor = hasGpuCalibration ? 0.76 : 0.62;
+            const highFactor = hasGpuCalibration ? 1.55 : 2.15;
+            const lowSeconds = totalSeconds * lowFactor;
+            const highSeconds = totalSeconds * highFactor;
 
             const estimate = document.getElementById('epochEstimate');
             const estimateDetail = document.getElementById('epochEstimateDetail');
             const deviceBadge = document.getElementById('trainingDeviceBadge');
-            const accelerator = document.getElementById('trainingAccelerator');
             const routeNote = document.getElementById('trainingRouteNote');
 
             estimate.textContent = `${formatDuration(lowSeconds)} – ${formatDuration(highSeconds)}`;
-            estimateDetail.textContent = `${formatDuration(epochSeconds * 0.65)} – ${formatDuration(epochSeconds * 2.1)} per epoch · ${epochs} epoch${epochs === 1 ? '' : 's'} · excludes data preparation, validation, checkpoints, and downloads.`;
+            estimateDetail.textContent = `${formatDuration(epochSeconds * lowFactor)} – ${formatDuration(epochSeconds * highFactor)} per epoch · ${epochs} epoch${epochs === 1 ? '' : 's'} · includes validation, checkpoint, and data-pipeline allowances.`;
             document.getElementById('stepsPerEpoch').textContent = stepsPerEpoch.toLocaleString();
-            document.getElementById('trainingMethod').textContent = profile.method;
-            document.getElementById('trainingVram').textContent = profile.vram;
-            document.getElementById('trainingDownload').textContent = profile.download;
-            document.getElementById('trainingUseCase').textContent = profile.useCase;
+            document.getElementById('effectiveBatch').textContent = effectiveBatch.toLocaleString();
+            const volume = task === 'speech'
+                ? `${formatCompact(trainSamples * unit * epochs)} audio sec`
+                : task === 'vision'
+                    ? `${formatCompact(trainSamples * epochs)} images`
+                    : `${formatCompact(trainSamples * unit * epochs)} tokens`;
+            document.getElementById('trainingVolume').textContent = volume;
+            document.getElementById('trainingCost').textContent = cloudRate ? `${formatBudget(lowSeconds / 3600 * cloudRate)}–${formatBudget(highSeconds / 3600 * cloudRate)}` : 'Add rate';
+            document.getElementById('trainingMethod').textContent = `${strategy.label} · ${precision.label}`;
+            document.getElementById('trainingVram').textContent = `~${plannedMemoryGb < 10 ? plannedMemoryGb.toFixed(1) : Math.round(plannedMemoryGb)} GB plan`;
+            updateModelBriefing(profile);
 
             if (hasGpuCalibration) {
                 const precision = trainingPlannerTelemetry.shaderF16Supported ? 'FP16 WebGPU' : 'FP32 WebGPU';
-                accelerator.textContent = `${precision} proxy`;
                 deviceBadge.textContent = `Calibrated from ${gpuGflops.toFixed(1)} GFLOPS browser benchmark`;
-                routeNote.textContent = `${profile.name} is planned as ${profile.method}. The estimate scales from this browser's ${gpuGflops.toFixed(1)} GFLOPS shader test, but use a native PyTorch/JAX or cloud accelerator for real training. The ${formatBytes(trainingPlannerTelemetry.maxBufferSizeBytes)} WebGPU buffer limit is not a measurement of installed VRAM.`;
+                routeNote.textContent = `${profile.name} is planned as ${strategy.label} with ${precision}. The range is scaled from this browser's ${gpuGflops.toFixed(1)} GFLOPS shader test and includes your validation/checkpoint settings; use native PyTorch, JAX, or a cloud accelerator for real training. The ${formatBytes(trainingPlannerTelemetry.maxBufferSizeBytes)} WebGPU buffer limit is not installed VRAM.`;
             } else {
-                accelerator.textContent = cpuGflops ? 'CPU / Wasm proxy' : 'Generic baseline';
                 deviceBadge.textContent = 'CPU fallback — wide estimate range';
-                routeNote.textContent = `${profile.name} is planned as ${profile.method}. No measured WebGPU training proxy is available, so this is intentionally a wide CPU-oriented range. For any LLM or audio fine-tune, use a native GPU runtime or cloud GPU with at least ${profile.vram} available.`;
+                routeNote.textContent = `${profile.name} is planned as ${strategy.label} with ${precision}. No measured WebGPU training proxy is available, so this is intentionally a wide CPU-oriented range. For this run, plan a native GPU runtime or cloud GPU with about ${plannedMemoryGb < 10 ? plannedMemoryGb.toFixed(1) : Math.round(plannedMemoryGb)} GB of free accelerator memory plus framework overhead.`;
+            }
+
+            const readiness = document.getElementById('trainingReadiness');
+            const readinessDetail = document.getElementById('trainingReadinessDetail');
+            const confidence = document.getElementById('planConfidence');
+            confidence.textContent = hasGpuCalibration ? 'Device-calibrated' : 'Wide planning range';
+            confidence.className = `text-[10px] font-mono px-2 py-1 rounded-md border ${hasGpuCalibration ? 'border-cyan-400/35 bg-cyan-500/10 text-cyan-200' : 'border-slate-700 bg-slate-900/70 text-slate-300'}`;
+            if (precision.label === '4-bit base' && strategy.id === 'full') {
+                readiness.textContent = 'Adjust strategy';
+                readiness.className = 'font-mono font-semibold text-rose-300';
+                readinessDetail.textContent = 'A 4-bit base is normally paired with adapters/QLoRA rather than a full-parameter update.';
+            } else if (task === 'llm' && strategy.id === 'full') {
+                readiness.textContent = 'High memory risk';
+                readiness.className = 'font-mono font-semibold text-rose-300';
+                readinessDetail.textContent = 'Full LLM fine-tuning needs substantially more memory. Use LoRA/QLoRA unless you have a deliberately sized training cluster.';
+            } else if (plannedMemoryGb >= 16) {
+                readiness.textContent = 'Native GPU advised';
+                readiness.className = 'font-mono font-semibold text-amber-300';
+                readinessDetail.textContent = `This plan targets roughly ${Math.round(plannedMemoryGb)} GB before runtime headroom. Confirm the native trainer, sequence packing, and actual GPU allocation.`;
+            } else if (devices > 1) {
+                readiness.textContent = 'Scale-out planned';
+                readiness.className = 'font-mono font-semibold text-cyan-300';
+                readinessDetail.textContent = `${devices} devices are modeled with ${Math.round(deviceEfficiency * 100)}% parallel efficiency. Networking and small batches can make real scaling lower.`;
+            } else {
+                readiness.textContent = 'Ready for a pilot';
+                readiness.className = 'font-mono font-semibold text-emerald-300';
+                readinessDetail.textContent = 'The plan is suitable for a short calibration run. Measure a few dozen optimizer updates before setting a final schedule.';
             }
 
             latestTrainingEstimate = {
+                version: '2.0',
                 workload: task,
                 model: profile.name,
-                method: profile.method,
+                modelParameters: profile.parameters,
+                method: strategy.label,
+                precision: precision.label,
                 samples,
+                trainingSamples: trainSamples,
+                validationSamples,
+                validationPercent: validationPct,
                 epochs,
-                batchSize: batch,
+                microBatchSize: batch,
+                gradientAccumulation: accumulation,
+                devices,
+                effectiveGlobalBatch: effectiveBatch,
                 unitPerExample: unit,
                 stepsPerEpoch,
-                estimatedEpochSeconds: { low: Math.round(epochSeconds * 0.65), high: Math.round(epochSeconds * 2.1) },
+                microStepsPerEpoch,
+                pipelineEfficiencyPercent: Math.round(pipelineEfficiency * 100),
+                evaluationEveryUpdates: evalEvery,
+                checkpointEveryUpdates: checkpointEvery,
+                estimatedPlanMemoryGb: Number(plannedMemoryGb.toFixed(1)),
+                estimatedEpochSeconds: { low: Math.round(epochSeconds * lowFactor), high: Math.round(epochSeconds * highFactor) },
                 estimatedTotalSeconds: { low: Math.round(lowSeconds), high: Math.round(highSeconds) },
+                estimatedCostUsd: cloudRate ? { low: Number((lowSeconds / 3600 * cloudRate).toFixed(2)), high: Number((highSeconds / 3600 * cloudRate).toFixed(2)), hourlyRate: cloudRate } : null,
+                overheadSeconds: { evaluation: Math.round(evaluationSeconds), checkpoints: Math.round(checkpointSeconds), dataPipeline: Math.round(dataWaitSeconds) },
                 calibration: hasGpuCalibration ? 'WebGPU shader benchmark proxy' : 'CPU / generic planning proxy'
             };
+            flashPlannerMetrics();
             if (latestDiagnosticReport) latestDiagnosticReport.trainingPlanner = latestTrainingEstimate;
+        }
+
+        async function copyTrainingPlan() {
+            if (!latestTrainingEstimate) return;
+            const copyText = document.getElementById('copyPlanText');
+            try {
+                await navigator.clipboard.writeText(JSON.stringify(latestTrainingEstimate, null, 2));
+                copyText.textContent = 'Copied!';
+                setTimeout(() => { copyText.textContent = 'Copy plan'; }, 1800);
+            } catch {
+                copyText.textContent = 'Copy failed';
+                setTimeout(() => { copyText.textContent = 'Copy plan'; }, 1800);
+            }
         }
 
         async function runAnalysis() {
