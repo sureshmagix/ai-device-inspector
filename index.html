@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Device Capability Inspector</title>
+    <!-- Tailwind CSS for modern UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center py-10 px-4">
+
+    <div class="max-w-4xl w-full">
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                AI Device Capability Inspector
+            </h1>
+            <p class="text-slate-400 mt-2">Analyze local hardware specs and determine browser-based AI model readiness.</p>
+        </header>
+
+        <!-- Action Card -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl text-center mb-8">
+            <button id="runBtn" onclick="runAnalysis()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-8 py-3 rounded-xl transition-all shadow-lg shadow-cyan-500/20 cursor-pointer">
+                Run Device & AI Benchmark
+            </button>
+            <div id="loading" class="hidden mt-4 text-cyan-400 animate-pulse">Analyzing hardware parameters...</div>
+        </div>
+
+        <!-- Results Grid -->
+        <div id="results" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Hardware Specs -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-xl font-semibold mb-4 text-cyan-400 flex items-center gap-2">💻 Hardware Profile</h2>
+                <ul id="specsList" class="space-y-3 text-slate-300 text-sm">
+                    <!-- Populated by JS -->
+                </ul>
+            </div>
+
+            <!-- AI Operations Support -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-xl font-semibold mb-4 text-emerald-400 flex items-center gap-2">⚡ Supported AI Operations</h2>
+                <div id="aiTierList" class="space-y-3">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function runAnalysis() {
+            const runBtn = document.getElementById('runBtn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            
+            runBtn.disabled = true;
+            loading.classList.remove('hidden');
+            results.classList.add('hidden');
+
+            // Simulate slight delay for effect
+            await new Promise(r => setTimeout(r, 800));
+
+            // 1. Gather Hardware Metrics
+            const cpuThreads = navigator.hardwareConcurrency || 'Unknown';
+            const deviceMemory = navigator.deviceMemory ? `${navigator.deviceMemory} GB (approx)` : 'Not shared by browser';
+            const platform = navigator.platform || navigator.userAgentData?.platform || 'Unknown';
+            const maxTouch = navigator.maxTouchPoints || 0;
+
+            // 2. Check WebGPU / WebGL
+            let webgpuSupported = false;
+            let gpuAdapterName = 'Not Available';
+            if (navigator.gpu) {
+                try {
+                    const adapter = await navigator.gpu.requestAdapter();
+                    if (adapter) {
+                        webgpuSupported = true;
+                        const info = await adapter.requestAdapterInfo();
+                        gpuAdapterName = `${info.vendor} ${info.architecture || info.device}`;
+                    }
+                } catch (e) {
+                    gpuAdapterName = 'WebGPU supported but failed initialization';
+                }
+            }
+
+            // 3. Render Specs
+            const specsList = document.getElementById('specsList');
+            specsList.innerHTML = `
+                <li class="flex justify-between border-b border-slate-800 pb-2"><span>Platform:</span> <span class="font-mono text-cyan-300">${platform}</span></li>
+                <li class="flex justify-between border-b border-slate-800 pb-2"><span>CPU Threads:</span> <span class="font-mono text-cyan-300">${cpuThreads} cores</span></li>
+                <li class="flex justify-between border-b border-slate-800 pb-2"><span>Estimated RAM:</span> <span class="font-mono text-cyan-300">${deviceMemory}</span></li>
+                <li class="flex justify-between border-b border-slate-800 pb-2"><span>WebGPU Status:</span> <span class="font-mono ${webgpuSupported ? 'text-emerald-400' : 'text-rose-400'}">${webgpuSupported ? 'Supported' : 'Not Supported'}</span></li>
+                <li class="flex justify-between"><span>GPU Info:</span> <span class="font-mono text-cyan-300 truncate max-w-[200px]" title="${gpuAdapterName}">${gpuAdapterName}</span></li>
+            `;
+
+            // 4. Determine AI Capabilities & Tiers
+            const aiTierList = document.getElementById('aiTierList');
+            let operations = [];
+
+            // Tier 1: Wasm / Transformers.js (Always possible if CPU exists)
+            operations.push({
+                name: 'Lightweight NLP & Embeddings',
+                desc: 'Sentiment analysis, text chunking, and small embedding models (e.g., MiniLM via Transformers.js).',
+                status: 'Ready',
+                badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+            });
+
+            // Tier 2: WebGPU / Small LLMs
+            if (webgpuSupported) {
+                operations.push({
+                    name: 'Local Small Language Models (SLMs)',
+                    desc: 'Run 1B - 3B quantized models (Phi-3, Gemma-2 2B) locally via WebLLM.',
+                    status: 'High Performance',
+                    badge: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
+                });
+            } else {
+                operations.push({
+                    name: 'Local Small Language Models (SLMs)',
+                    desc: 'Requires WebGPU support for browser-based LLM acceleration.',
+                    status: 'Not Recommended (No WebGPU)',
+                    badge: 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                });
+            }
+
+            // Tier 3: Computer Vision / OCR
+            operations.push({
+                name: 'In-Browser Computer Vision',
+                desc: 'Client-side OCR, face detection, and lightweight classification using ONNX Runtime Web.',
+                status: cpuThreads >= 4 ? 'Supported' : 'Limited',
+                badge: cpuThreads >= 4 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+            });
+
+            aiTierList.innerHTML = operations.map(op => `
+                <div class="p-3 bg-slate-950/50 rounded-xl border border-slate-800">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-medium text-slate-200">${op.name}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full border ${op.badge}">${op.status}</span>
+                    </div>
+                    <p class="text-xs text-slate-400">${op.desc}</p>
+                </div>
+            `).join('');
+
+            loading.classList.add('hidden');
+            results.classList.remove('hidden');
+            runBtn.disabled = false;
+        }
+    </script>
+</body>
+</html>
