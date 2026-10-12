@@ -1,147 +1,1022 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Device Capability Inspector</title>
-    <!-- Tailwind CSS for modern UI -->
+    <title>AI Device Capability Inspector — Suresh Babu Projects</title>
+    <meta name="description" content="Client-side WebGPU, FP16 shader, Wasm SIMD, and WebNN hardware benchmark to evaluate browser readiness for local LLMs and vision models.">
+    <meta name="author" content="Suresh Babu (sureshmagix)">
+    <meta name="theme-color" content="#030712">
+    <link rel="canonical" href="https://sureshmagix.github.io/ai-device-inspector/">
+
+    <!-- OpenGraph Metadata for Portfolio & Social Previews -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Suresh Babu — Projects & Experiments">
+    <meta property="og:title" content="AI Device Capability Inspector — Neural Telemetry & WebAI Benchmark">
+    <meta property="og:description" content="Benchmark your browser's WebGPU compute shaders, FP16 support, VRAM limits, and Wasm SIMD for local LLMs and vision models.">
+    <meta property="og:url" content="https://sureshmagix.github.io/ai-device-inspector/">
+
+    <!-- Inline SVG Favicon (prevents 404 on GitHub Pages) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23030712'/%3E%3Cpath d='M36 8L14 36h16l-2 20 22-28H34l2-20z' fill='%2322d3ee'/%3E%3C/svg%3E">
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Space Grotesk, Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Space Grotesk', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --grid-color: rgba(34, 211, 238, 0.05);
+        }
+        body {
+            background-color: #030712;
+            background-image:
+                radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 50% 90%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
+                linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+            background-attachment: fixed;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.68);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+        }
+        .glass-card-hover {
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .glass-card-hover:hover {
+            border-color: rgba(34, 211, 238, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 24px 48px -12px rgba(6, 182, 212, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+        }
+        @keyframes fadeInSlide {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-reveal {
+            animation: fadeInSlide 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .gauge-ring {
+            transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .radar-polygon {
+            transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center py-10 px-4">
+<body class="text-slate-100 min-h-screen flex flex-col items-center pb-12 px-4 sm:px-6 selection:bg-cyan-500/30 selection:text-cyan-200">
 
-    <div class="max-w-4xl w-full">
-        <!-- Header -->
-        <header class="text-center mb-10">
-            <h1 class="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
-                AI Device Capability Inspector
-            </h1>
-            <p class="text-slate-400 mt-2">Analyze local hardware specs and determine browser-based AI model readiness.</p>
-        </header>
+    <!-- Ambient Top Glow Bar -->
+    <div class="fixed top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent z-50"></div>
 
-        <!-- Action Card -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl text-center mb-8">
-            <button id="runBtn" onclick="runAnalysis()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-8 py-3 rounded-xl transition-all shadow-lg shadow-cyan-500/20 cursor-pointer">
-                Run Device & AI Benchmark
-            </button>
-            <div id="loading" class="hidden mt-4 text-cyan-400 animate-pulse">Analyzing hardware parameters...</div>
+    <!-- Portfolio Top Navigation Bar (sureshmagix.github.io integration) -->
+    <nav class="w-full max-w-6xl py-4 mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-slate-800/80">
+        <a href="https://sureshmagix.github.io/" class="inline-flex items-center gap-2.5 text-sm font-medium text-slate-300 hover:text-cyan-300 transition-colors group">
+            <span class="w-8 h-8 rounded-lg bg-slate-900 border border-slate-700/80 group-hover:border-cyan-500/40 flex items-center justify-center font-display font-bold text-cyan-400">
+                S
+            </span>
+            <span>← All Projects <span class="text-slate-500 hidden sm:inline">(sureshmagix.github.io)</span></span>
+        </a>
+
+        <div class="flex items-center gap-3">
+            <a href="https://github.com/sureshmagix/ai-device-inspector" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 text-xs font-mono transition-all">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+                </svg>
+                <span>Source Code</span>
+            </a>
         </div>
+    </nav>
 
-        <!-- Results Grid -->
-        <div id="results" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Hardware Specs -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                <h2 class="text-xl font-semibold mb-4 text-cyan-400 flex items-center gap-2">💻 Hardware Profile</h2>
-                <ul id="specsList" class="space-y-3 text-slate-300 text-sm">
-                    <!-- Populated by JS -->
-                </ul>
+    <div class="max-w-6xl w-full space-y-8">
+        <!-- Top Status Bar & Header -->
+        <header class="text-center space-y-4">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs font-mono tracking-wider uppercase">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                <span class="w-2 h-2 rounded-full bg-cyan-400 -ml-4"></span>
+                Client-Side WebAI &amp; Hardware Telemetry Engine v2.4
             </div>
 
-            <!-- AI Operations Support -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-                <h2 class="text-xl font-semibold mb-4 text-emerald-400 flex items-center gap-2">⚡ Supported AI Operations</h2>
-                <div id="aiTierList" class="space-y-3">
+            <h1 class="font-display text-4xl sm:text-5xl font-bold tracking-tight">
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-sky-400 to-indigo-400">
+                    AI Device Capability Inspector
+                </span>
+            </h1>
+
+            <p class="text-slate-400 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
+                Deep-scan your browser's neural acceleration stack—WebGPU compute shaders, FP16 precision, VRAM buffer limits, Wasm SIMD, and local storage—to benchmark real-world readiness for in-browser LLMs and vision models.
+            </p>
+        </header>
+
+        <!-- Primary Action & Live Scan Control Card -->
+        <section class="glass-card rounded-3xl p-6 sm:p-8 relative overflow-hidden">
+            <div class="absolute -right-20 -top-20 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                <div class="text-center md:text-left space-y-1.5">
+                    <h2 class="font-display text-xl font-bold text-white flex items-center justify-center md:justify-start gap-2.5">
+                        <svg class="w-6 h-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                        </svg>
+                        Hardware &amp; Neural Compute Diagnostic
+                    </h2>
+                    <p class="text-slate-400 text-sm">
+                        Executes real-time CPU tensor math, WebGPU compute kernel dispatches, and feature probes.
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-center gap-3">
+                    <button id="runBtn" onclick="runAnalysis()" class="group relative inline-flex items-center gap-3 bg-gradient-to-r from-cyan-400 via-sky-500 to-indigo-500 hover:from-cyan-300 hover:via-sky-400 hover:to-indigo-400 text-slate-950 font-bold px-7 py-3.5 rounded-2xl transition-all duration-200 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-400/40 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg id="btnIcon" class="w-5 h-5 transition-transform group-hover:rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span id="btnText">Run Device &amp; AI Benchmark</span>
+                    </button>
+
+                    <button id="exportBtn" onclick="copyReport()" class="hidden items-center gap-2 px-4 py-3.5 rounded-2xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700/80 hover:border-cyan-500/40 text-sm font-medium transition-all cursor-pointer">
+                        <svg class="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        <span id="exportBtnText">Copy JSON Report</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Multi-Stage Progress Stepper -->
+            <div id="loading" class="hidden mt-6 pt-6 border-t border-slate-800/80 space-y-3">
+                <div class="flex justify-between items-center text-xs font-mono">
+                    <span id="scanStageText" class="text-cyan-400 flex items-center gap-2">
+                        <svg class="w-4 h-4 animate-spin text-cyan-400" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                        Initializing hardware probes...
+                    </span>
+                    <span id="scanPercent" class="text-slate-400">0%</span>
+                </div>
+                <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                    <div id="scanProgressBar" class="h-full bg-gradient-to-r from-cyan-400 via-sky-500 to-indigo-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Dashboard -->
+        <main id="results" class="hidden space-y-6">
+
+            <!-- Top Row: AI Readiness Score Gauge + Radar Chart + Live Benchmark KPIs -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- 1. Circular AI Readiness Gauge (4 cols) -->
+                <div class="glass-card glass-card-hover rounded-3xl p-6 lg:col-span-4 flex flex-col items-center justify-between text-center animate-reveal">
+                    <div class="w-full flex items-center justify-between mb-2">
+                        <span class="text-xs font-mono uppercase tracking-wider text-slate-400">Overall Readiness</span>
+                        <span id="tierBadge" class="text-xs font-mono font-semibold px-2.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                            Evaluating
+                        </span>
+                    </div>
+
+                    <div class="relative my-3 flex items-center justify-center">
+                        <svg class="w-44 h-44 -rotate-90 transform" viewBox="0 0 160 160">
+                            <defs>
+                                <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#22d3ee" />
+                                    <stop offset="50%" stop-color="#38bdf8" />
+                                    <stop offset="100%" stop-color="#818cf8" />
+                                </linearGradient>
+                            </defs>
+                            <!-- Background Track -->
+                            <circle cx="80" cy="80" r="66" stroke="rgba(30, 41, 59, 0.9)" stroke-width="12" fill="transparent" />
+                            <!-- Animated Score Ring -->
+                            <circle id="scoreRing" class="gauge-ring" cx="80" cy="80" r="66" stroke="url(#scoreGrad)" stroke-width="12" stroke-linecap="round" fill="transparent" stroke-dasharray="414.69" stroke-dashoffset="414.69" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span id="scoreValue" class="font-display text-5xl font-bold text-white tracking-tight">0</span>
+                            <span class="text-xs font-mono text-slate-400 uppercase tracking-widest mt-0.5">/ 100 PTS</span>
+                        </div>
+                    </div>
+
+                    <div class="w-full space-y-1">
+                        <h3 id="tierTitle" class="font-display text-lg font-bold text-cyan-300">Neural Capability Tier</h3>
+                        <p id="tierSummary" class="text-xs text-slate-400 leading-relaxed">
+                            Run the benchmark to classify your device's local AI inference tier.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 2. 5-Axis Capability Radar Chart (4 cols) -->
+                <div class="glass-card glass-card-hover rounded-3xl p-6 lg:col-span-4 flex flex-col items-center justify-between animate-reveal" style="animation-delay: 60ms;">
+                    <div class="w-full flex items-center justify-between mb-1">
+                        <span class="text-xs font-mono uppercase tracking-wider text-slate-400">Capability Matrix</span>
+                        <span class="text-xs font-mono text-cyan-400">5-Axis Telemetry</span>
+                    </div>
+
+                    <div class="relative w-full flex items-center justify-center my-1">
+                        <svg id="radarSvg" class="w-56 h-52 overflow-visible" viewBox="0 0 220 200">
+                            <!-- Pentagon Grid Rings (25%, 50%, 75%, 100%) -->
+                            <g stroke="rgba(148, 163, 184, 0.16)" stroke-width="1" fill="none">
+                                <polygon points="110,30 176.6,78.4 151.1,156.6 68.9,156.6 43.4,78.4" fill="rgba(15, 23, 42, 0.4)" />
+                                <polygon points="110,50 159.9,86.3 140.9,144.9 79.1,144.9 60.1,86.3" />
+                                <polygon points="110,70 143.3,94.2 130.6,133.3 89.4,133.3 76.7,94.2" />
+                                <polygon points="110,90 126.6,102.1 120.3,121.6 99.7,121.6 93.4,102.1" />
+                                <!-- Axis lines from center (110, 100) -->
+                                <line x1="110" y1="100" x2="110" y2="30" />
+                                <line x1="110" y1="100" x2="176.6" y2="78.4" />
+                                <line x1="110" y1="100" x2="151.1" y2="156.6" />
+                                <line x1="110" y1="100" x2="68.9" y2="156.6" />
+                                <line x1="110" y1="100" x2="43.4" y2="78.4" />
+                            </g>
+
+                            <!-- Dynamic Data Polygon -->
+                            <polygon id="radarPolygon" class="radar-polygon" points="110,100 110,100 110,100 110,100 110,100" fill="rgba(34, 211, 238, 0.22)" stroke="#22d3ee" stroke-width="2" />
+                            <g id="radarDots" fill="#38bdf8"></g>
+
+                            <!-- Axis Labels -->
+                            <text x="110" y="18" text-anchor="middle" fill="#cbd5e1" font-size="10" font-family="JetBrains Mono">WebGPU</text>
+                            <text x="184" y="81" text-anchor="start" fill="#cbd5e1" font-size="10" font-family="JetBrains Mono">VRAM</text>
+                            <text x="158" y="172" text-anchor="middle" fill="#cbd5e1" font-size="10" font-family="JetBrains Mono">CPU</text>
+                            <text x="62" y="172" text-anchor="middle" fill="#cbd5e1" font-size="10" font-family="JetBrains Mono">Storage</text>
+                            <text x="36" y="81" text-anchor="end" fill="#cbd5e1" font-size="10" font-family="JetBrains Mono">AI APIs</text>
+                        </svg>
+                    </div>
+
+                    <div class="w-full grid grid-cols-3 gap-2 pt-2 border-t border-slate-800/80 text-center">
+                        <div>
+                            <div class="text-[11px] text-slate-400">FP16 Shader</div>
+                            <div id="kpiFp16" class="font-mono text-xs font-semibold text-slate-200 mt-0.5">—</div>
+                        </div>
+                        <div>
+                            <div class="text-[11px] text-slate-400">Wasm SIMD</div>
+                            <div id="kpiSimd" class="font-mono text-xs font-semibold text-slate-200 mt-0.5">—</div>
+                        </div>
+                        <div>
+                            <div class="text-[11px] text-slate-400">WebNN API</div>
+                            <div id="kpiWebnn" class="font-mono text-xs font-semibold text-slate-200 mt-0.5">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Live Micro-Benchmark Telemetry (4 cols) -->
+                <div class="glass-card glass-card-hover rounded-3xl p-6 lg:col-span-4 flex flex-col justify-between animate-reveal" style="animation-delay: 120ms;">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-mono uppercase tracking-wider text-slate-400">Live Compute Benchmarks</span>
+                        <span class="text-xs font-mono text-emerald-400 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Measured
+                        </span>
+                    </div>
+
+                    <div class="space-y-4 my-auto">
+                        <!-- GPU Compute Kernel Throughput -->
+                        <div class="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-slate-300 font-medium">WebGPU Matrix/Vector Kernel</span>
+                                <span id="benchGpuValue" class="font-mono text-sm font-bold text-cyan-300">—</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                                <div id="benchGpuBar" class="h-full bg-gradient-to-r from-cyan-400 to-sky-500 rounded-full transition-all duration-700" style="width: 0%"></div>
+                            </div>
+                            <p id="benchGpuDesc" class="text-[11px] text-slate-400 font-mono">Awaiting WGSL compute dispatch...</p>
+                        </div>
+
+                        <!-- CPU FP32 Tensor Dot-Product Throughput -->
+                        <div class="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-slate-300 font-medium">CPU FP32 Tensor Throughput</span>
+                                <span id="benchCpuValue" class="font-mono text-sm font-bold text-indigo-300">—</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                                <div id="benchCpuBar" class="h-full bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full transition-all duration-700" style="width: 0%"></div>
+                            </div>
+                            <p id="benchCpuDesc" class="text-[11px] text-slate-400 font-mono">Awaiting Float32Array FMA loop...</p>
+                        </div>
+
+                        <!-- Model Cache Storage Quota -->
+                        <div class="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-slate-300 font-medium">Available Model Cache Quota</span>
+                                <span id="benchStorageValue" class="font-mono text-sm font-bold text-emerald-300">—</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                                <div id="benchStorageBar" class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full transition-all duration-700" style="width: 0%"></div>
+                            </div>
+                            <p id="benchStorageDesc" class="text-[11px] text-slate-400 font-mono">IndexedDB / Cache API headroom for weights</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Row: Hardware Profile + Supported AI Operations -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Hardware & Accelerator Profile -->
+                <div class="glass-card rounded-3xl p-6 sm:p-7 animate-reveal" style="animation-delay: 180ms;">
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="font-display text-xl font-bold text-white flex items-center gap-2.5">
+                            <span class="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                            </span>
+                            Hardware &amp; Accelerator Profile
+                        </h2>
+                        <span id="archBadge" class="text-xs font-mono px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-300 border border-slate-700">
+                            Host Specs
+                        </span>
+                    </div>
+
+                    <ul id="specsList" class="space-y-3 text-slate-300 text-sm">
+                        <!-- Populated by JS -->
+                    </ul>
+                </div>
+
+                <!-- Supported AI Operations -->
+                <div class="glass-card rounded-3xl p-6 sm:p-7 animate-reveal" style="animation-delay: 240ms;">
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="font-display text-xl font-bold text-white flex items-center gap-2.5">
+                            <span class="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                            </span>
+                            Supported AI Workloads
+                        </h2>
+                        <span class="text-xs font-mono px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                            Runtime Matrix
+                        </span>
+                    </div>
+
+                    <div id="aiTierList" class="space-y-3">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Row: Real-World Browser AI Model Compatibility Cards -->
+            <div class="glass-card rounded-3xl p-6 sm:p-7 animate-reveal" style="animation-delay: 300ms;">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+                    <div>
+                        <h2 class="font-display text-xl font-bold text-white flex items-center gap-2.5">
+                            <span class="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                </svg>
+                            </span>
+                            Browser AI Model Readiness Catalog
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Estimated compatibility for popular Transformers.js, WebLLM, and ONNX Runtime Web models based on your GPU buffer limits and compute throughput.
+                        </p>
+                    </div>
+                </div>
+
+                <div id="modelCatalogGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Populated by JS -->
                 </div>
             </div>
-        </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center text-xs text-slate-500 pt-4 pb-6 font-mono space-y-2">
+            <div>100% Client-Side Execution • Zero Telemetry Sent Externally • WebGPU / WebGL2 / Wasm SIMD / WebNN Inspector</div>
+            <div>
+                Part of <a href="https://sureshmagix.github.io/" class="text-cyan-400 hover:underline">Suresh Babu's Projects &amp; Experiments</a> •
+                <a href="https://github.com/sureshmagix/ai-device-inspector" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-white hover:underline">GitHub Repository</a>
+            </div>
+        </footer>
     </div>
 
     <script>
-        async function runAnalysis() {
-            const runBtn = document.getElementById('runBtn');
-            const loading = document.getElementById('loading');
-            const results = document.getElementById('results');
-            
-            runBtn.disabled = true;
-            loading.classList.remove('hidden');
-            results.classList.add('hidden');
+        let latestDiagnosticReport = null;
 
-            // Simulate slight delay for effect
-            await new Promise(r => setTimeout(r, 800));
+        function setProgress(percent, text) {
+            const bar = document.getElementById('scanProgressBar');
+            const pct = document.getElementById('scanPercent');
+            const stage = document.getElementById('scanStageText');
+            if (bar) bar.style.width = `${percent}%`;
+            if (pct) pct.textContent = `${percent}%`;
+            if (stage) {
+                stage.innerHTML = `
+                    <svg class="w-4 h-4 animate-spin text-cyan-400 shrink-0" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                    </svg>
+                    <span>${text}</span>
+                `;
+            }
+        }
 
-            // 1. Gather Hardware Metrics
-            const cpuThreads = navigator.hardwareConcurrency || 'Unknown';
-            const deviceMemory = navigator.deviceMemory ? `${navigator.deviceMemory} GB (approx)` : 'Not shared by browser';
-            const platform = navigator.platform || navigator.userAgentData?.platform || 'Unknown';
-            const maxTouch = navigator.maxTouchPoints || 0;
+        // Detect WebAssembly SIMD support using a minimal valid Wasm SIMD module
+        async function detectWasmSimd() {
+            try {
+                const simdBytes = new Uint8Array([
+                    0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00,
+                    0x01, 0x05, 0x01, 0x60, 0x00, 0x01, 0x7b, 0x03,
+                    0x02, 0x01, 0x00, 0x0a, 0x0a, 0x01, 0x08, 0x00,
+                    0xfd, 0x0c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x0b
+                ]);
+                return WebAssembly.validate(simdBytes);
+            } catch {
+                return false;
+            }
+        }
 
-            // 2. Check WebGPU / WebGL
-            let webgpuSupported = false;
-            let gpuAdapterName = 'Not Available';
-            if (navigator.gpu) {
-                try {
-                    const adapter = await navigator.gpu.requestAdapter();
-                    if (adapter) {
-                        webgpuSupported = true;
-                        const info = await adapter.requestAdapterInfo();
-                        gpuAdapterName = `${info.vendor} ${info.architecture || info.device}`;
-                    }
-                } catch (e) {
-                    gpuAdapterName = 'WebGPU supported but failed initialization';
+        // Probe unmasked WebGL2 renderer as a reliable fallback/complement for GPU model identification
+        function getWebGLRendererInfo() {
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+                if (!gl) return { supported: false, renderer: null, vendor: null };
+                const dbgRenderInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                const renderer = dbgRenderInfo
+                    ? gl.getParameter(dbgRenderInfo.UNMASKED_RENDERER_WEBGL)
+                    : gl.getParameter(gl.RENDERER);
+                const vendor = dbgRenderInfo
+                    ? gl.getParameter(dbgRenderInfo.UNMASKED_VENDOR_WEBGL)
+                    : gl.getParameter(gl.VENDOR);
+                return { supported: true, renderer, vendor };
+            } catch {
+                return { supported: false, renderer: null, vendor: null };
+            }
+        }
+
+        // Run a real CPU Float32 tensor dot-product micro-benchmark
+        function runCpuTensorBenchmark() {
+            const length = 65536;
+            const iterations = 180;
+            const vecA = new Float32Array(length);
+            const vecB = new Float32Array(length);
+            for (let i = 0; i < length; i++) {
+                vecA[i] = (i % 17) * 0.05;
+                vecB[i] = (i % 13) * 0.03;
+            }
+
+            const t0 = performance.now();
+            let acc = 0.0;
+            for (let iter = 0; iter < iterations; iter++) {
+                for (let i = 0; i < length; i += 4) {
+                    acc += vecA[i] * vecB[i]
+                         + vecA[i + 1] * vecB[i + 1]
+                         + vecA[i + 2] * vecB[i + 2]
+                         + vecA[i + 3] * vecB[i + 3];
                 }
             }
+            const elapsedSec = Math.max((performance.now() - t0) / 1000, 0.0005);
+            const totalFlops = length * iterations * 2;
+            const gflops = (totalFlops / elapsedSec) / 1e9;
+            return {
+                gflops: Number(gflops.toFixed(2)),
+                elapsedMs: Number((elapsedSec * 1000).toFixed(1)),
+                checksum: acc
+            };
+        }
 
-            // 3. Render Specs
-            const specsList = document.getElementById('specsList');
-            specsList.innerHTML = `
-                <li class="flex justify-between border-b border-slate-800 pb-2"><span>Platform:</span> <span class="font-mono text-cyan-300">${platform}</span></li>
-                <li class="flex justify-between border-b border-slate-800 pb-2"><span>CPU Threads:</span> <span class="font-mono text-cyan-300">${cpuThreads} cores</span></li>
-                <li class="flex justify-between border-b border-slate-800 pb-2"><span>Estimated RAM:</span> <span class="font-mono text-cyan-300">${deviceMemory}</span></li>
-                <li class="flex justify-between border-b border-slate-800 pb-2"><span>WebGPU Status:</span> <span class="font-mono ${webgpuSupported ? 'text-emerald-400' : 'text-rose-400'}">${webgpuSupported ? 'Supported' : 'Not Supported'}</span></li>
-                <li class="flex justify-between"><span>GPU Info:</span> <span class="font-mono text-cyan-300 truncate max-w-[200px]" title="${gpuAdapterName}">${gpuAdapterName}</span></li>
-            `;
+        // Run a real WebGPU WGSL compute shader benchmark if WebGPU is available
+        async function runWebGpuComputeBenchmark(adapter) {
+            if (!adapter) return null;
+            let device = null;
+            try {
+                device = await adapter.requestDevice();
+                const numElements = 65536;
+                const fmaRepeats = 256;
 
-            // 4. Determine AI Capabilities & Tiers
-            const aiTierList = document.getElementById('aiTierList');
-            let operations = [];
+                const shaderModule = device.createShaderModule({
+                    code: `
+                        @group(0) @binding(0) var<storage, read_write> data: array<f32>;
+                        @compute @workgroup_size(64)
+                        fn main(@builtin(global_invocation_id) id: vec3<u32>) {
+                            let idx = id.x;
+                            if (idx >= ${numElements}u) { return; }
+                            var val = f32(idx) * 0.0001 + 1.0;
+                            for (var i: u32 = 0u; i < ${fmaRepeats}u; i = i + 1u) {
+                                val = val * 1.00001 + 0.00001;
+                            }
+                            data[idx] = val;
+                        }
+                    `
+                });
 
-            // Tier 1: Wasm / Transformers.js (Always possible if CPU exists)
-            operations.push({
-                name: 'Lightweight NLP & Embeddings',
-                desc: 'Sentiment analysis, text chunking, and small embedding models (e.g., MiniLM via Transformers.js).',
-                status: 'Ready',
-                badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                const storageBuffer = device.createBuffer({
+                    size: numElements * 4,
+                    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+                });
+
+                const bindGroupLayout = device.createBindGroupLayout({
+                    entries: [{
+                        binding: 0,
+                        visibility: GPUShaderStage.COMPUTE,
+                        buffer: { type: 'storage' }
+                    }]
+                });
+
+                const pipelineLayout = device.createPipelineLayout({
+                    bindGroupLayouts: [bindGroupLayout]
+                });
+
+                const computePipeline = await device.createComputePipelineAsync({
+                    layout: pipelineLayout,
+                    compute: { module: shaderModule, entryPoint: 'main' }
+                });
+
+                const bindGroup = device.createBindGroup({
+                    layout: bindGroupLayout,
+                    entries: [{ binding: 0, resource: { buffer: storageBuffer } }]
+                });
+
+                const dispatches = 24;
+                const t0 = performance.now();
+                const commandEncoder = device.createCommandEncoder();
+                for (let d = 0; d < dispatches; d++) {
+                    const pass = commandEncoder.beginComputePass();
+                    pass.setPipeline(computePipeline);
+                    pass.setBindGroup(0, bindGroup);
+                    pass.dispatchWorkgroups(Math.ceil(numElements / 64));
+                    pass.end();
+                }
+                device.queue.submit([commandEncoder.finish()]);
+                if (typeof device.queue.onSubmittedWorkDone === 'function') {
+                    await device.queue.onSubmittedWorkDone();
+                }
+                const elapsedSec = Math.max((performance.now() - t0) / 1000, 0.0005);
+                const totalFlops = numElements * fmaRepeats * 2 * dispatches;
+                const gflops = (totalFlops / elapsedSec) / 1e9;
+
+                storageBuffer.destroy();
+                device.destroy();
+
+                return {
+                    gflops: Number(gflops.toFixed(1)),
+                    elapsedMs: Number((elapsedSec * 1000).toFixed(1))
+                };
+            } catch (err) {
+                if (device) {
+                    try { device.destroy(); } catch {}
+                }
+                return null;
+            }
+        }
+
+        // Render the 5-axis SVG Radar Chart
+        function updateRadarChart(axes) {
+            const centerX = 110;
+            const centerY = 100;
+            const maxRadius = 70;
+            const angles = [-90, -18, 54, 126, 198].map(deg => (deg * Math.PI) / 180);
+
+            const points = axes.map((val, idx) => {
+                const ratio = Math.max(0.12, Math.min(1, val / 100));
+                const r = maxRadius * ratio;
+                const x = (centerX + r * Math.cos(angles[idx])).toFixed(1);
+                const y = (centerY + r * Math.sin(angles[idx])).toFixed(1);
+                return { x, y };
             });
 
-            // Tier 2: WebGPU / Small LLMs
-            if (webgpuSupported) {
-                operations.push({
-                    name: 'Local Small Language Models (SLMs)',
-                    desc: 'Run 1B - 3B quantized models (Phi-3, Gemma-2 2B) locally via WebLLM.',
-                    status: 'High Performance',
-                    badge: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
-                });
-            } else {
-                operations.push({
-                    name: 'Local Small Language Models (SLMs)',
-                    desc: 'Requires WebGPU support for browser-based LLM acceleration.',
-                    status: 'Not Recommended (No WebGPU)',
-                    badge: 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                });
+            const poly = document.getElementById('radarPolygon');
+            const dots = document.getElementById('radarDots');
+            if (poly) {
+                poly.setAttribute('points', points.map(p => `${p.x},${p.y}`).join(' '));
+            }
+            if (dots) {
+                dots.innerHTML = points
+                    .map(p => `<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="#22d3ee" stroke="#030712" stroke-width="1.5" />`)
+                    .join('');
+            }
+        }
+
+        // Format bytes into human-readable MB/GB
+        function formatBytes(bytes) {
+            if (!bytes || isNaN(bytes)) return 'Unknown';
+            const gb = bytes / (1024 ** 3);
+            if (gb >= 1) return `${gb.toFixed(2)} GB`;
+            const mb = bytes / (1024 ** 2);
+            return `${mb.toFixed(0)} MB`;
+        }
+
+        async function runAnalysis() {
+            const runBtn = document.getElementById('runBtn');
+            const btnText = document.getElementById('btnText');
+            const exportBtn = document.getElementById('exportBtn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+
+            runBtn.disabled = true;
+            btnText.textContent = 'Running Neural Diagnostics...';
+            loading.classList.remove('hidden');
+            results.classList.add('hidden');
+            exportBtn.classList.add('hidden');
+
+            // Stage 1: Probe CPU, Platform & Wasm SIMD
+            setProgress(20, 'Probing CPU topology, User-Agent Client Hints & Wasm SIMD...');
+            await new Promise(r => setTimeout(r, 180));
+
+            const cpuThreadsNum = navigator.hardwareConcurrency || 0;
+            const cpuThreadsLabel = cpuThreadsNum ? `${cpuThreadsNum} logical cores` : 'Unknown';
+            const ramGbNum = navigator.deviceMemory || 0;
+            const deviceMemoryLabel = ramGbNum ? `~${ramGbNum} GB (browser cap)` : 'Not exposed by browser';
+
+            let platformLabel = navigator.userAgentData?.platform || navigator.platform || 'Unknown';
+            let archLabel = 'Standard Host';
+            if (navigator.userAgentData?.getHighEntropyValues) {
+                try {
+                    const uaData = await navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness', 'platformVersion']);
+                    if (uaData.architecture) {
+                        archLabel = `${uaData.architecture}${uaData.bitness ? ` (${uaData.bitness}-bit)` : ''}`;
+                    }
+                } catch {}
             }
 
-            // Tier 3: Computer Vision / OCR
-            operations.push({
-                name: 'In-Browser Computer Vision',
-                desc: 'Client-side OCR, face detection, and lightweight classification using ONNX Runtime Web.',
-                status: cpuThreads >= 4 ? 'Supported' : 'Limited',
-                badge: cpuThreads >= 4 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+            const wasmSimdSupported = await detectWasmSimd();
+            const webnnSupported = typeof navigator.ml !== 'undefined';
+            const builtinAiSupported = Boolean(window.ai || window.LanguageModel || navigator.modelContext);
+
+            // Stage 2: Probe WebGPU Adapter, FP16, Limits & WebGL2
+            setProgress(50, 'Inspecting WebGPU adapter, shader-f16 support & VRAM buffer limits...');
+            await new Promise(r => setTimeout(r, 200));
+
+            let webgpuSupported = false;
+            let shaderF16Supported = false;
+            let gpuAdapterName = 'Not Available';
+            let maxBufferSizeBytes = 0;
+            let maxStorageBindingBytes = 0;
+            let gpuAdapter = null;
+
+            const webglInfo = getWebGLRendererInfo();
+
+            if (navigator.gpu) {
+                try {
+                    gpuAdapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' });
+                    if (gpuAdapter) {
+                        webgpuSupported = true;
+                        shaderF16Supported = gpuAdapter.features?.has('shader-f16') || false;
+                        maxBufferSizeBytes = gpuAdapter.limits?.maxBufferSize || 0;
+                        maxStorageBindingBytes = gpuAdapter.limits?.maxStorageBufferBindingSize || 0;
+
+                        let info = gpuAdapter.info || null;
+                        if (!info && typeof gpuAdapter.requestAdapterInfo === 'function') {
+                            try {
+                                info = await gpuAdapter.requestAdapterInfo();
+                            } catch {}
+                        }
+
+                        const parts = [info?.vendor, info?.architecture, info?.device, info?.description]
+                            .filter(Boolean)
+                            .map(s => String(s).trim())
+                            .filter((v, i, a) => v && a.indexOf(v) === i);
+
+                        if (parts.length > 0) {
+                            gpuAdapterName = parts.join(' • ');
+                        } else if (webglInfo.renderer) {
+                            gpuAdapterName = webglInfo.renderer;
+                        } else {
+                            gpuAdapterName = 'WebGPU Active (Hardware Vendor Masked)';
+                        }
+                    }
+                } catch (e) {
+                    gpuAdapterName = webglInfo.renderer || 'WebGPU present but adapter init failed';
+                }
+            } else if (webglInfo.renderer) {
+                gpuAdapterName = `${webglInfo.renderer} (WebGL2 only)`;
+            }
+
+            // Stage 3: Execute Live CPU & WebGPU Micro-Benchmarks
+            setProgress(80, 'Executing WGSL compute shader & Float32 tensor benchmarks...');
+            await new Promise(r => setTimeout(r, 200));
+
+            const cpuBench = runCpuTensorBenchmark();
+            const gpuBench = webgpuSupported ? await runWebGpuComputeBenchmark(gpuAdapter) : null;
+
+            // Stage 4: Check Storage Quota for Model Weights
+            setProgress(95, 'Auditing IndexedDB / Cache API storage headroom...');
+            let availableStorageBytes = 0;
+            if (navigator.storage && navigator.storage.estimate) {
+                try {
+                    const estimate = await navigator.storage.estimate();
+                    availableStorageBytes = Math.max(0, (estimate.quota || 0) - (estimate.usage || 0));
+                } catch {}
+            }
+
+            setProgress(100, 'Diagnostics complete.');
+            await new Promise(r => setTimeout(r, 140));
+
+            // Compute 5-Axis Scores (0..100) & Overall AI Readiness Score
+            const axisWebGpu = webgpuSupported ? (shaderF16Supported ? 100 : 82) : (webglInfo.supported ? 35 : 10);
+            const maxBufGb = maxBufferSizeBytes / (1024 ** 3);
+            const axisVram = webgpuSupported
+                ? Math.min(100, Math.round(45 + Math.min(maxBufGb, 4) * 13.75))
+                : 20;
+            const axisCpu = Math.min(100, Math.round((Math.min(cpuThreadsNum || 4, 16) / 16) * 75 + (wasmSimdSupported ? 25 : 0)));
+            const storageGb = availableStorageBytes / (1024 ** 3);
+            const axisStorage = availableStorageBytes > 0
+                ? Math.min(100, Math.round(Math.min(storageGb, 20) * 5))
+                : 50;
+            const axisApis = Math.min(
+                100,
+                (webgpuSupported ? 40 : 0) +
+                (shaderF16Supported ? 25 : 0) +
+                (wasmSimdSupported ? 20 : 0) +
+                (webnnSupported ? 10 : 0) +
+                (builtinAiSupported ? 5 : 0)
+            );
+
+            const overallScore = Math.round(
+                axisWebGpu * 0.34 +
+                axisVram * 0.22 +
+                axisCpu * 0.20 +
+                axisStorage * 0.12 +
+                axisApis * 0.12
+            );
+
+            // Classify Tier
+            let tierBadgeText = 'TIER B • EDGE READY';
+            let tierTitleText = 'Edge Vision & NLP Ready';
+            let tierSummaryText = 'Capable of running embeddings, OCR, and lightweight quantized models in the browser.';
+
+            if (overallScore >= 85) {
+                tierBadgeText = 'TIER S • NEURAL WORKSTATION';
+                tierTitleText = 'Full Local LLM & Multimodal Ready';
+                tierSummaryText = 'Hardware-accelerated WebGPU with FP16/high buffer headroom. Ready for 3B–8B quantized LLMs & real-time vision.';
+            } else if (overallScore >= 68) {
+                tierBadgeText = 'TIER A • LOCAL SLM READY';
+                tierTitleText = 'Accelerated Small Language Models';
+                tierSummaryText = 'Strong WebGPU & SIMD acceleration. Ideal for 1B–3B local SLMs (Llama-3.2, Phi-3, Gemma-2) and Whisper audio.';
+            } else if (overallScore < 45) {
+                tierBadgeText = 'TIER C • CPU WASM ONLY';
+                tierTitleText = 'Lightweight CPU Inference';
+                tierSummaryText = 'WebGPU unavailable. Best suited for compact CPU/Wasm embedding models and lightweight ONNX tasks.';
+            }
+
+            // Reveal Results first so SVG transitions animate smoothly
+            loading.classList.add('hidden');
+            results.classList.remove('hidden');
+            exportBtn.classList.remove('hidden');
+            exportBtn.classList.add('inline-flex');
+
+            // Update Score Ring & Tier Info
+            const circumference = 414.69;
+            const scoreRing = document.getElementById('scoreRing');
+            const scoreValue = document.getElementById('scoreValue');
+            document.getElementById('tierBadge').textContent = tierBadgeText;
+            document.getElementById('tierTitle').textContent = tierTitleText;
+            document.getElementById('tierSummary').textContent = tierSummaryText;
+            document.getElementById('archBadge').textContent = archLabel;
+
+            scoreValue.textContent = overallScore;
+            requestAnimationFrame(() => {
+                const offset = circumference - (overallScore / 100) * circumference;
+                scoreRing.style.strokeDashoffset = offset;
+                updateRadarChart([axisWebGpu, axisVram, axisCpu, axisStorage, axisApis]);
             });
 
+            // Update KPI Pills under Radar
+            const kpiFp16 = document.getElementById('kpiFp16');
+            kpiFp16.textContent = shaderF16Supported ? 'Supported' : (webgpuSupported ? 'FP32 Only' : 'N/A');
+            kpiFp16.className = `font-mono text-xs font-semibold mt-0.5 ${shaderF16Supported ? 'text-emerald-400' : 'text-amber-400'}`;
+
+            const kpiSimd = document.getElementById('kpiSimd');
+            kpiSimd.textContent = wasmSimdSupported ? 'Active (128-bit)' : 'Fallback';
+            kpiSimd.className = `font-mono text-xs font-semibold mt-0.5 ${wasmSimdSupported ? 'text-emerald-400' : 'text-rose-400'}`;
+
+            const kpiWebnn = document.getElementById('kpiWebnn');
+            kpiWebnn.textContent = webnnSupported ? 'Available' : 'Not Enabled';
+            kpiWebnn.className = `font-mono text-xs font-semibold mt-0.5 ${webnnSupported ? 'text-emerald-400' : 'text-slate-400'}`;
+
+            // Update Live Benchmark Bars
+            const benchGpuValue = document.getElementById('benchGpuValue');
+            const benchGpuBar = document.getElementById('benchGpuBar');
+            const benchGpuDesc = document.getElementById('benchGpuDesc');
+            if (gpuBench) {
+                benchGpuValue.textContent = `${gpuBench.gflops} GFLOPS`;
+                benchGpuBar.style.width = `${Math.min(100, Math.max(18, Math.round((gpuBench.gflops / 150) * 100)))}%`;
+                benchGpuDesc.textContent = `24 WGSL compute dispatches completed in ${gpuBench.elapsedMs} ms`;
+            } else {
+                benchGpuValue.textContent = 'Unavailable';
+                benchGpuBar.style.width = '8%';
+                benchGpuDesc.textContent = 'WebGPU compute pipeline not available in this browser';
+            }
+
+            const benchCpuValue = document.getElementById('benchCpuValue');
+            const benchCpuBar = document.getElementById('benchCpuBar');
+            const benchCpuDesc = document.getElementById('benchCpuDesc');
+            benchCpuValue.textContent = `${cpuBench.gflops} GFLOPS`;
+            benchCpuBar.style.width = `${Math.min(100, Math.max(20, Math.round((cpuBench.gflops / 12) * 100)))}%`;
+            benchCpuDesc.textContent = `11.7M FP32 FMA ops completed in ${cpuBench.elapsedMs} ms`;
+
+            const benchStorageValue = document.getElementById('benchStorageValue');
+            const benchStorageBar = document.getElementById('benchStorageBar');
+            const benchStorageDesc = document.getElementById('benchStorageDesc');
+            benchStorageValue.textContent = formatBytes(availableStorageBytes);
+            benchStorageBar.style.width = `${axisStorage}%`;
+            benchStorageDesc.textContent = storageGb >= 8
+                ? 'Sufficient browser cache for multiple 4-bit LLM weights'
+                : 'Limited cache quota for multi-gigabyte model weights';
+
+            // Render Detailed Hardware Specs List
+            const specsList = document.getElementById('specsList');
+            const hardwareRows = [
+                { label: 'Platform / OS', value: `${platformLabel} (${archLabel})`, color: 'text-cyan-300' },
+                { label: 'CPU Concurrency', value: cpuThreadsLabel, color: 'text-cyan-300' },
+                { label: 'Reported Host RAM', value: deviceMemoryLabel, color: 'text-cyan-300' },
+                {
+                    label: 'WebGPU Accelerator',
+                    value: webgpuSupported ? (shaderF16Supported ? 'Supported (FP16 + FP32)' : 'Supported (FP32)') : 'Not Supported',
+                    color: webgpuSupported ? 'text-emerald-400' : 'text-rose-400'
+                },
+                { label: 'GPU / Renderer', value: gpuAdapterName, color: 'text-sky-300', truncate: true },
+                {
+                    label: 'Max GPU Buffer Size',
+                    value: maxBufferSizeBytes ? `${formatBytes(maxBufferSizeBytes)} (Binding: ${formatBytes(maxStorageBindingBytes)})` : 'N/A',
+                    color: 'text-indigo-300'
+                },
+                {
+                    label: 'Wasm SIMD & Built-in AI',
+                    value: `SIMD: ${wasmSimdSupported ? 'Yes' : 'No'} • Prompt API: ${builtinAiSupported ? 'Detected' : 'No'}`,
+                    color: 'text-slate-300'
+                }
+            ];
+
+            specsList.innerHTML = hardwareRows.map(row => `
+                <li class="flex items-center justify-between gap-4 border-b border-slate-800/70 pb-2.5 last:border-none last:pb-0">
+                    <span class="text-slate-400 shrink-0">${row.label}</span>
+                    <span class="font-mono text-xs sm:text-sm ${row.color} ${row.truncate ? 'truncate max-w-[260px] sm:max-w-[320px]' : ''} text-right" title="${row.value}">
+                        ${row.value}
+                    </span>
+                </li>
+            `).join('');
+
+            // Render Supported AI Workloads
+            const aiTierList = document.getElementById('aiTierList');
+            const operations = [
+                {
+                    name: 'Lightweight NLP & Vector Embeddings',
+                    desc: 'Client-side semantic search, RAG chunking, and sentiment classification (MiniLM / BGE via Transformers.js).',
+                    status: wasmSimdSupported ? 'Optimal (Wasm SIMD)' : 'Ready',
+                    badge: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25'
+                },
+                webgpuSupported ? {
+                    name: 'Local Small Language Models (SLMs)',
+                    desc: `Run 1B–3B 4-bit quantized models (Llama-3.2, Phi-3.5, Gemma-2) via WebLLM${shaderF16Supported ? ' with native FP16 shader acceleration' : ''}.`,
+                    status: shaderF16Supported ? 'Ultra Fast (WebGPU FP16)' : 'High Performance (WebGPU)',
+                    badge: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/25'
+                } : {
+                    name: 'Local Small Language Models (SLMs)',
+                    desc: 'Requires WebGPU for interactive token generation speeds in the browser.',
+                    status: 'Not Recommended (No WebGPU)',
+                    badge: 'bg-rose-500/10 text-rose-300 border-rose-500/25'
+                },
+                {
+                    name: 'In-Browser Computer Vision & Audio ASR',
+                    desc: 'Real-time OCR, Whisper speech-to-text, segmentation (SAM-2 tiny), and object detection via ONNX Runtime Web.',
+                    status: (webgpuSupported || cpuThreadsNum >= 4) ? 'Supported' : 'Limited Concurrency',
+                    badge: (webgpuSupported || cpuThreadsNum >= 4)
+                        ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25'
+                        : 'bg-amber-500/10 text-amber-300 border-amber-500/25'
+                },
+                {
+                    name: '7B–8B Parameter Quantized LLMs',
+                    desc: 'Heavy in-browser models (Llama-3.1-8B / Qwen-2.5-7B q4f16) requiring >=1GB GPU buffer bindings and >5GB cache.',
+                    status: (webgpuSupported && maxBufferSizeBytes >= 1024 ** 3 && storageGb >= 5)
+                        ? 'Capable'
+                        : (webgpuSupported ? 'VRAM / Buffer Constrained' : 'Unsupported'),
+                    badge: (webgpuSupported && maxBufferSizeBytes >= 1024 ** 3 && storageGb >= 5)
+                        ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
+                        : 'bg-amber-500/10 text-amber-300 border-amber-500/25'
+                }
+            ];
+
             aiTierList.innerHTML = operations.map(op => `
-                <div class="p-3 bg-slate-950/50 rounded-xl border border-slate-800">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="font-medium text-slate-200">${op.name}</span>
-                        <span class="text-xs px-2 py-0.5 rounded-full border ${op.badge}">${op.status}</span>
+                <div class="p-3.5 bg-slate-950/55 hover:bg-slate-950/80 transition-colors rounded-2xl border border-slate-800/80">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-1">
+                        <span class="font-medium text-slate-100 text-sm">${op.name}</span>
+                        <span class="text-[11px] font-mono px-2.5 py-0.5 rounded-full border ${op.badge}">${op.status}</span>
                     </div>
-                    <p class="text-xs text-slate-400">${op.desc}</p>
+                    <p class="text-xs text-slate-400 leading-relaxed">${op.desc}</p>
                 </div>
             `).join('');
 
-            loading.classList.add('hidden');
-            results.classList.remove('hidden');
+            // Render Model Compatibility Catalog
+            const modelCatalogGrid = document.getElementById('modelCatalogGrid');
+            const models = [
+                {
+                    family: 'Embeddings / RAG',
+                    name: 'all-MiniLM-L6-v2',
+                    size: '~85 MB (q8)',
+                    runtime: 'Transformers.js (SIMD)',
+                    ready: true,
+                    estSpeed: wasmSimdSupported ? '~180 embeds/sec' : '~65 embeds/sec'
+                },
+                {
+                    family: 'Speech & Vision',
+                    name: 'Whisper-Base / YOLOv8n',
+                    size: '~145 MB (FP16/q8)',
+                    runtime: webgpuSupported ? 'ONNX WebGPU' : 'ONNX Wasm',
+                    ready: webgpuSupported || cpuThreadsNum >= 4,
+                    estSpeed: webgpuSupported ? 'Real-time (60+ FPS)' : 'Near real-time'
+                },
+                {
+                    family: 'Compact Reasoning SLM',
+                    name: 'Llama-3.2-1B / Gemma-2-2B',
+                    size: '~1.3 GB (q4f16_1)',
+                    runtime: 'WebLLM (WebGPU)',
+                    ready: webgpuSupported,
+                    estSpeed: webgpuSupported ? (shaderF16Supported ? '~45–85 tok/s' : '~25–45 tok/s') : 'Requires WebGPU'
+                },
+                {
+                    family: 'Full Edge LLM (7B–8B)',
+                    name: 'Qwen-2.5-7B / Llama-3.1-8B',
+                    size: '~4.6 GB (q4f16_1)',
+                    runtime: 'WebLLM (WebGPU)',
+                    ready: webgpuSupported && maxBufferSizeBytes >= 1024 ** 3 && storageGb >= 5,
+                    estSpeed: (webgpuSupported && maxBufferSizeBytes >= 1024 ** 3) ? '~12–30 tok/s' : 'Buffer limit exceeded'
+                }
+            ];
+
+            modelCatalogGrid.innerHTML = models.map(m => `
+                <div class="p-4 rounded-2xl bg-slate-950/60 border ${m.ready ? 'border-slate-800/90 hover:border-cyan-500/40' : 'border-rose-950/60 opacity-75'} transition-all flex flex-col justify-between gap-3">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-1.5">
+                            <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400">${m.family}</span>
+                            <span class="w-2 h-2 rounded-full ${m.ready ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-rose-400'}"></span>
+                        </div>
+                        <h3 class="font-display font-bold text-slate-100 text-base">${m.name}</h3>
+                        <p class="text-xs font-mono text-slate-400 mt-1">Weights: ${m.size}</p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono">
+                        <span class="text-slate-400">${m.runtime}</span>
+                        <span class="${m.ready ? 'text-cyan-300' : 'text-rose-400'} font-semibold">${m.estSpeed}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Store structured JSON report for one-click export
+            latestDiagnosticReport = {
+                timestamp: new Date().toISOString(),
+                readinessScore: overallScore,
+                tier: tierBadgeText,
+                hardware: {
+                    platform: platformLabel,
+                    architecture: archLabel,
+                    cpuThreads: cpuThreadsNum || null,
+                    deviceMemoryGb: ramGbNum || null,
+                    gpuAdapter: gpuAdapterName,
+                    webgpuSupported,
+                    shaderF16Supported,
+                    maxBufferSizeBytes,
+                    maxStorageBindingBytes,
+                    wasmSimdSupported,
+                    webnnSupported,
+                    builtinAiSupported,
+                    availableStorageBytes
+                },
+                benchmarks: {
+                    cpuTensorGflops: cpuBench.gflops,
+                    webgpuComputeGflops: gpuBench ? gpuBench.gflops : null
+                }
+            };
+
             runBtn.disabled = false;
+            btnText.textContent = 'Re-Run Device & AI Benchmark';
         }
+
+        async function copyReport() {
+            if (!latestDiagnosticReport) return;
+            const exportBtnText = document.getElementById('exportBtnText');
+            try {
+                await navigator.clipboard.writeText(JSON.stringify(latestDiagnosticReport, null, 2));
+                exportBtnText.textContent = 'Copied to Clipboard!';
+                setTimeout(() => {
+                    exportBtnText.textContent = 'Copy JSON Report';
+                }, 2000);
+            } catch {
+                exportBtnText.textContent = 'Copy Failed';
+            }
+        }
+
+        // Automatically run diagnostics on initial load for instant portfolio preview
+        window.addEventListener('DOMContentLoaded', () => {
+            runAnalysis();
+        });
     </script>
 </body>
 </html>
