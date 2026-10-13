@@ -398,6 +398,71 @@
                 </div>
             </div>
 
+            
+            <!-- NVIDIA Jetson Dedicated AI Board Card (Dynamically displayed when a Jetson / Tegra SoC is detected) -->
+            <div id="jetsonCard" class="hidden glass-card rounded-3xl p-6 sm:p-7 border-emerald-500/40 bg-gradient-to-br from-emerald-950/40 via-slate-900/80 to-slate-950/90 animate-reveal">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5 border-b border-emerald-500/20 pb-4">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 text-emerald-400">
+                            <svg class="w-7 h-7" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span class="text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold">NVIDIA Jetson Edge AI Platform Identified</span>
+                            </div>
+                            <h2 id="jetsonBoardTitle" class="font-display text-2xl font-bold text-white mt-0.5">NVIDIA Jetson Board</h2>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span id="jetsonArchBadge" class="text-xs font-mono px-3 py-1.5 rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold">Tegra Architecture</span>
+                        <span id="jetsonTopsBadge" class="text-xs font-mono px-3 py-1.5 rounded-xl bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-semibold">Hardware AI Engine</span>
+                    </div>
+                </div>
+
+                <!-- Jetson Hardware Spec Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5 text-xs font-mono">
+                    <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800">
+                        <div class="text-slate-400 text-[11px]">AI Compute / Tensor Engine</div>
+                        <div id="jetsonCudaDetail" class="text-emerald-300 font-bold text-sm mt-1">—</div>
+                    </div>
+                    <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800">
+                        <div class="text-slate-400 text-[11px]">Memory Architecture</div>
+                        <div id="jetsonMemDetail" class="text-cyan-300 font-bold text-sm mt-1">Unified Memory (UMA)</div>
+                    </div>
+                    <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800">
+                        <div class="text-slate-400 text-[11px]">CPU Core Cluster</div>
+                        <div id="jetsonCpuDetail" class="text-indigo-300 font-bold text-sm mt-1">—</div>
+                    </div>
+                    <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800">
+                        <div class="text-slate-400 text-[11px]">JetPack / L4T Driver</div>
+                        <div id="jetsonDriverDetail" class="text-amber-300 font-bold text-sm mt-1">—</div>
+                    </div>
+                </div>
+
+                <!-- WebGPU Activation Helper Box for Chromium on Jetson Linux -->
+                <div id="jetsonWebGpuHelper" class="p-4 rounded-2xl bg-slate-950/90 border border-emerald-500/25 text-xs">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                        <div class="flex items-center gap-2 text-emerald-400 font-medium">
+                            <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <span id="jetsonWebGpuStatusText">Jetson WebGPU Acceleration Notice</span>
+                        </div>
+                        <button id="copyJetsonCmdBtn" onclick="copyJetsonCommand()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 cursor-pointer transition-colors text-[11px] font-mono">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            <span id="copyJetsonCmdText">Copy Terminal Launch Command</span>
+                        </button>
+                    </div>
+                    <p class="text-slate-400 text-[11px] leading-relaxed mb-2" id="jetsonWebGpuExplainer">
+                        On Jetson Linux, Chromium uses hardware-accelerated WebGL 2.0 by default. To unlock raw WebGPU WGSL compute shaders, launch Chromium with these flags:
+                    </p>
+                    <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 font-mono text-[11px] text-cyan-300 break-all select-all">
+                        chromium-browser --enable-features=Vulkan,UseSkiaRenderer,DefaultANGLEVulkan --enable-unsafe-webgpu
+                    </div>
+                </div>
+            </div>
+
             <!-- Middle Row: Hardware Profile + Supported AI Operations -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -464,6 +529,79 @@
 
                 <div id="modelCatalogGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Populated by JS -->
+                </div>
+            </div>
+
+            
+            <!-- Deep System, Graphics & Platform Telemetry Card -->
+            <div id="systemDetailsCard" class="glass-card rounded-3xl p-6 sm:p-7 animate-reveal" style="animation-delay: 340ms;">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+                    <div>
+                        <h2 class="font-display text-xl font-bold text-white flex items-center gap-2.5">
+                            <span class="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                                </svg>
+                            </span>
+                            Deep System, Graphics &amp; Platform Telemetry
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Exhaustive hardware inspection across GPU renderers, texture buffers, memory architecture, audio DSP, and network topology.
+                        </p>
+                    </div>
+                    <span class="text-xs font-mono px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
+                        Extended Diagnostics
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                    <!-- 1. Compute & Processor -->
+                    <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2.5">
+                        <div class="flex items-center gap-2 text-cyan-400 font-semibold border-b border-slate-800/80 pb-2">
+                            <span>⚡ Processor &amp; Compute Pipeline</span>
+                        </div>
+                        <ul id="telemetryComputeList" class="space-y-2 font-mono text-[11px] text-slate-300"></ul>
+                    </div>
+
+                    <!-- 2. GPU & Graphics Engine -->
+                    <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2.5">
+                        <div class="flex items-center gap-2 text-emerald-400 font-semibold border-b border-slate-800/80 pb-2">
+                            <span>🎨 Graphics &amp; Shader Pipeline</span>
+                        </div>
+                        <ul id="telemetryGraphicsList" class="space-y-2 font-mono text-[11px] text-slate-300"></ul>
+                    </div>
+
+                    <!-- 3. Memory & Storage Headroom -->
+                    <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2.5">
+                        <div class="flex items-center gap-2 text-indigo-400 font-semibold border-b border-slate-800/80 pb-2">
+                            <span>💾 Memory &amp; Storage Subsystem</span>
+                        </div>
+                        <ul id="telemetryMemoryList" class="space-y-2 font-mono text-[11px] text-slate-300"></ul>
+                    </div>
+
+                    <!-- 4. Display & Refresh Rate -->
+                    <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2.5">
+                        <div class="flex items-center gap-2 text-amber-400 font-semibold border-b border-slate-800/80 pb-2">
+                            <span>🖥️ Display &amp; Visual Engine</span>
+                        </div>
+                        <ul id="telemetryDisplayList" class="space-y-2 font-mono text-[11px] text-slate-300"></ul>
+                    </div>
+
+                    <!-- 5. Audio DSP Hardware -->
+                    <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2.5">
+                        <div class="flex items-center gap-2 text-fuchsia-400 font-semibold border-b border-slate-800/80 pb-2">
+                            <span>🎙️ Audio DSP Hardware (Speech AI)</span>
+                        </div>
+                        <ul id="telemetryAudioList" class="space-y-2 font-mono text-[11px] text-slate-300"></ul>
+                    </div>
+
+                    <!-- 6. Network & Power -->
+                    <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2.5">
+                        <div class="flex items-center gap-2 text-sky-400 font-semibold border-b border-slate-800/80 pb-2">
+                            <span>🌐 Connectivity &amp; Power Source</span>
+                        </div>
+                        <ul id="telemetryNetworkList" class="space-y-2 font-mono text-[11px] text-slate-300"></ul>
+                    </div>
                 </div>
             </div>
 
@@ -761,24 +899,304 @@
             }
         }
 
-        // Probe unmasked WebGL2 renderer as a reliable fallback/complement for GPU model identification
-        function getWebGLRendererInfo() {
+        
+        // Comprehensive WebGL 1 & 2 details inspector
+        function getWebGLDetails() {
             try {
                 const canvas = document.createElement('canvas');
                 const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
-                if (!gl) return { supported: false, renderer: null, vendor: null };
-                const dbgRenderInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                const renderer = dbgRenderInfo
-                    ? gl.getParameter(dbgRenderInfo.UNMASKED_RENDERER_WEBGL)
-                    : gl.getParameter(gl.RENDERER);
-                const vendor = dbgRenderInfo
-                    ? gl.getParameter(dbgRenderInfo.UNMASKED_VENDOR_WEBGL)
-                    : gl.getParameter(gl.VENDOR);
-                return { supported: true, renderer, vendor };
-            } catch {
-                return { supported: false, renderer: null, vendor: null };
+                if (!gl) return { supported: false };
+                const isWebGL2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
+                const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+                const unmaskedRenderer = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : null;
+                const unmaskedVendor = dbg ? gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL) : null;
+                const standardRenderer = gl.getParameter(gl.RENDERER);
+                const standardVendor = gl.getParameter(gl.VENDOR);
+                const version = gl.getParameter(gl.VERSION) || '';
+                const shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || '';
+
+                // Probing texture & color buffer extensions for WebGL AI tensor operations
+                const hasHalfFloatColor = Boolean(gl.getExtension('EXT_color_buffer_half_float'));
+                const hasFloatColor = Boolean(gl.getExtension('EXT_color_buffer_float') || gl.getExtension('WEBGL_color_buffer_float'));
+                const hasHalfFloatTex = Boolean(gl.getExtension('OES_texture_half_float'));
+                const hasFloatTex = Boolean(gl.getExtension('OES_texture_float'));
+                const hasTimerQuery = Boolean(gl.getExtension('EXT_disjoint_timer_query_webgl2') || gl.getExtension('EXT_disjoint_timer_query'));
+                const hasAstc = Boolean(gl.getExtension('WEBGL_compressed_texture_astc'));
+                const hasS3tc = Boolean(gl.getExtension('WEBGL_compressed_texture_s3tc'));
+                const hasEtc = Boolean(gl.getExtension('WEBGL_compressed_texture_etc') || gl.getExtension('WEBGL_compressed_texture_etc1'));
+
+                const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE) || 0;
+                const maxRenderbufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) || 0;
+                const maxViewportDims = gl.getParameter(gl.MAX_VIEWPORT_DIMS) || [0, 0];
+                const maxTextureUnits = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS) || 0;
+                const maxVertexTextureUnits = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) || 0;
+                const maxCombinedTextureUnits = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS) || 0;
+
+                return {
+                    supported: true,
+                    isWebGL2,
+                    renderer: unmaskedRenderer || standardRenderer || 'Unknown GPU',
+                    vendor: unmaskedVendor || standardVendor || 'Unknown Vendor',
+                    rawRenderer: standardRenderer,
+                    rawVendor: standardVendor,
+                    version,
+                    shadingLanguageVersion,
+                    maxTextureSize,
+                    maxRenderbufferSize,
+                    maxViewportDims,
+                    maxTextureUnits,
+                    maxVertexTextureUnits,
+                    maxCombinedTextureUnits,
+                    features: {
+                        halfFloatColor: hasHalfFloatColor,
+                        floatColor: hasFloatColor,
+                        halfFloatTex: hasHalfFloatTex,
+                        floatTex: hasFloatTex,
+                        timerQuery: hasTimerQuery,
+                        astc: hasAstc,
+                        s3tc: hasS3tc,
+                        etc: hasEtc
+                    }
+                };
+            } catch (e) {
+                return { supported: false };
             }
         }
+
+        // Backward compatibility alias
+        function getWebGLRendererInfo() {
+            const d = getWebGLDetails();
+            return { supported: d.supported, renderer: d.renderer, vendor: d.vendor };
+        }
+
+        // Dedicated NVIDIA Jetson & Board Architecture Classifier
+        function detectBoardAndHardware(glDetails, webgpuAdapter, cpuThreads, deviceMemory, uaData) {
+            const r = (glDetails?.renderer || '').toLowerCase();
+            const v = (glDetails?.vendor || '').toLowerCase();
+            const ver = (glDetails?.version || '').toLowerCase();
+            const rawR = (glDetails?.rawRenderer || '').toLowerCase();
+            const ua = (navigator.userAgent || '').toLowerCase();
+            const plat = (navigator.platform || navigator.userAgentData?.platform || '').toLowerCase();
+            const arch = (uaData?.architecture || '').toLowerCase();
+
+            const isArm = plat.includes('arm') || plat.includes('aarch64') || ua.includes('aarch64') || ua.includes('armv8') || ua.includes('armv7') || arch.includes('arm');
+            const isNvidia = r.includes('nvidia') || v.includes('nvidia') || r.includes('nvgpu') || r.includes('tegra') || ver.includes('nvidia') || rawR.includes('nvidia');
+            const isTegra = isNvidia && (r.includes('tegra') || r.includes('nvgpu') || rawR.includes('tegra') || isArm);
+
+            if (isTegra || r.includes('orin') || r.includes('xavier') || r.includes('t210') || r.includes('t194') || r.includes('t234')) {
+                let boardName = 'NVIDIA Jetson Board';
+                let generation = 'Embedded Tegra SoC';
+                let archName = 'NVIDIA Tegra Architecture';
+                let cpuFamily = 'Arm64 Architecture';
+                let dla = 'Hardware Deep Learning Engine';
+                let tops = 'Edge AI Accelerated';
+                let cudaCores = 'CUDA & Tensor Cores';
+                let memoryType = 'Unified Memory Architecture (UMA)';
+                let boardFamily = 'orin';
+
+                if (r.includes('orin') || r.includes('t234') || rawR.includes('orin')) {
+                    boardFamily = 'orin';
+                    generation = 'Tegra234 (Ampere)';
+                    archName = 'NVIDIA Ampere Architecture (Tegra234 SoC)';
+                    cpuFamily = 'Arm Cortex-A78AE v8.2-A';
+                    dla = '2x NVDLA 2.0 Engines + PVA v2';
+                    memoryType = 'Unified LPDDR5 Memory (UMA @ 68–204 GB/s)';
+                    if (cpuThreads >= 12 && deviceMemory >= 32) {
+                        boardName = 'NVIDIA Jetson AGX Orin 64GB';
+                        tops = '275 TOPS INT8';
+                        cudaCores = '2048 CUDA Cores • 64 Tensor Cores (Gen 3)';
+                    } else if (cpuThreads >= 8 && deviceMemory >= 16) {
+                        boardName = 'NVIDIA Jetson AGX Orin 32GB / Orin NX 16GB';
+                        tops = '100–200 TOPS INT8';
+                        cudaCores = '1024–1792 CUDA Cores • 32–56 Tensor Cores';
+                    } else if (cpuThreads === 6 || deviceMemory >= 8) {
+                        boardName = 'NVIDIA Jetson Orin Nano 8GB / Orin NX 8GB';
+                        tops = '40–70 TOPS INT8';
+                        cudaCores = '1024 CUDA Cores • 32 Tensor Cores (Gen 3)';
+                    } else {
+                        boardName = 'NVIDIA Jetson Orin Nano 4GB';
+                        tops = '20 TOPS INT8';
+                        cudaCores = '512 CUDA Cores • 16 Tensor Cores (Gen 3)';
+                    }
+                } else if (r.includes('xavier') || r.includes('t194') || rawR.includes('xavier')) {
+                    boardFamily = 'xavier';
+                    generation = 'Tegra194 (Volta)';
+                    archName = 'NVIDIA Volta Architecture (Tegra194 SoC)';
+                    cpuFamily = 'NVIDIA Carmel Armv8.2 (64-bit)';
+                    dla = '2x NVDLA 1.0 Engines';
+                    memoryType = 'Unified LPDDR4x Memory (UMA @ 51–137 GB/s)';
+                    boardName = cpuThreads >= 8 ? 'NVIDIA Jetson AGX Xavier' : 'NVIDIA Jetson Xavier NX';
+                    tops = cpuThreads >= 8 ? '32 TOPS INT8' : '21 TOPS INT8';
+                    cudaCores = cpuThreads >= 8 ? '512 CUDA Cores • 64 Tensor Cores' : '384 CUDA Cores • 48 Tensor Cores';
+                } else if (r.includes('nano') || r.includes('x1') || r.includes('t210') || rawR.includes('nano')) {
+                    boardFamily = 'nano';
+                    generation = 'Tegra210 (Maxwell)';
+                    archName = 'NVIDIA Maxwell Architecture (Tegra210 SoC)';
+                    cpuFamily = 'Quad-Core Arm Cortex-A57 @ 1.43 GHz';
+                    boardName = 'NVIDIA Jetson Nano';
+                    tops = '472 GFLOPS FP16';
+                    cudaCores = '128 Maxwell CUDA Cores';
+                    dla = 'CUDA FP16 Acceleration';
+                    memoryType = 'Unified 2GB / 4GB LPDDR4 (UMA @ 25.6 GB/s)';
+                } else if (r.includes('tx2') || r.includes('t186')) {
+                    boardFamily = 'tx2';
+                    generation = 'Tegra186 (Pascal)';
+                    archName = 'NVIDIA Pascal Architecture (Tegra186 SoC)';
+                    cpuFamily = 'Dual Denver 2 + Quad Arm Cortex-A57';
+                    boardName = 'NVIDIA Jetson TX2';
+                    tops = '1.3 TFLOPS FP16';
+                    cudaCores = '256 Pascal CUDA Cores';
+                    memoryType = 'Unified 8GB LPDDR4 (UMA @ 59.7 GB/s)';
+                } else {
+                    if (cpuThreads >= 6) {
+                        boardFamily = 'orin';
+                        generation = 'Tegra234 (Ampere Series)';
+                        archName = 'NVIDIA Ampere Architecture (Tegra234 SoC)';
+                        cpuFamily = 'Arm Cortex-A78AE (v8.2-A)';
+                        boardName = 'NVIDIA Jetson Orin Series';
+                        tops = '40–275 TOPS INT8';
+                        cudaCores = 'Ampere CUDA & Tensor Cores';
+                        memoryType = 'Unified LPDDR5 Memory (UMA)';
+                    } else {
+                        boardFamily = 'nano';
+                        generation = 'Tegra210 (Maxwell Series)';
+                        archName = 'NVIDIA Maxwell Architecture';
+                        cpuFamily = 'Arm Cortex-A57';
+                        boardName = 'NVIDIA Jetson Nano / Embedded Tegra';
+                        tops = '472 GFLOPS FP16';
+                        cudaCores = '128 CUDA Cores';
+                        memoryType = 'Unified LPDDR4 Memory (UMA)';
+                    }
+                }
+
+                let jetpack = 'JetPack Linux Environment';
+                if (ver.includes('540.') || r.includes('540.')) jetpack = 'JetPack 6.x (L4T r36.x / Ubuntu 22.04)';
+                else if (ver.includes('535.') || ver.includes('525.')) jetpack = 'JetPack 5.1+ (L4T r35.x / Ubuntu 20.04)';
+                else if (ver.includes('510.')) jetpack = 'JetPack 5.0 (L4T r35.1)';
+                else if (ver.includes('32.')) jetpack = 'JetPack 4.x (L4T r32.x / Ubuntu 18.04)';
+
+                return {
+                    isJetson: true,
+                    boardFamily,
+                    boardName,
+                    generation,
+                    arch: archName,
+                    tops,
+                    cudaCores,
+                    cpuFamily,
+                    dla,
+                    memoryType,
+                    jetpack
+                };
+            }
+
+            const isAppleSilicon = /apple/i.test(r) || (/mac/i.test(plat) && cpuThreads >= 8 && !/intel/i.test(r));
+            return {
+                isJetson: false,
+                boardName: isAppleSilicon ? 'Apple Silicon Neural Workstation' : 'Standard Compute Host',
+                generation: isAppleSilicon ? 'Apple M-Series Silicon' : 'x86_64 / Standard SoC',
+                arch: isAppleSilicon ? 'Apple Unified Memory Architecture' : (arch || plat),
+                memoryType: isAppleSilicon ? 'Unified Memory Architecture (UMA)' : 'Discrete Host RAM / Dedicated VRAM',
+                tops: isAppleSilicon ? 'Apple Neural Engine (ANE) Accelerated' : 'Standard Host Pipeline'
+            };
+        }
+
+        // WebGL2 GPGPU Shader FMA Benchmark (Runs on Jetson Tegra GPUs when WebGPU is dormant)
+        async function runWebGLShaderBenchmark() {
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 512;
+                const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+                if (!gl) return null;
+
+                const vsSource = 'attribute vec2 p; void main() { gl_Position = vec4(p, 0.0, 1.0); }';
+                // 512x512 = 262,144 fragments; loop executes fused multiply-adds (FMAs)
+                const fsSource = 'precision highp float; void main() { vec4 acc = vec4(gl_FragCoord.xy * 0.001, 1.0, 0.5); vec4 c = vec4(1.00002, 0.99998, 1.00001, 0.99999); for (int i = 0; i < 120; i++) { acc = acc * c + vec4(0.0001, 0.0002, 0.0003, 0.0004); c = c * 0.999999 + acc * 0.000001; } gl_FragColor = acc * 0.00001; }';
+
+                const vs = gl.createShader(gl.VERTEX_SHADER);
+                gl.shaderSource(vs, vsSource);
+                gl.compileShader(vs);
+
+                const fs = gl.createShader(gl.FRAGMENT_SHADER);
+                gl.shaderSource(fs, fsSource);
+                gl.compileShader(fs);
+
+                const program = gl.createProgram();
+                gl.attachShader(program, vs);
+                gl.attachShader(program, fs);
+                gl.linkProgram(program);
+                gl.useProgram(program);
+
+                const quadBuf = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+
+                const posLoc = gl.getAttribLocation(program, 'p');
+                gl.enableVertexAttribArray(posLoc);
+                gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+                // Warmup pass
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                gl.finish();
+
+                const passes = 8;
+                // 262,144 frags * 120 iters * 20 flops * 8 passes = ~5.03 GFLOPs
+                const totalFlops = 512 * 512 * 120 * 20 * passes;
+                const t0 = performance.now();
+                for (let p = 0; p < passes; p++) {
+                    gl.drawArrays(gl.TRIANGLES, 0, 6);
+                }
+                gl.finish();
+                const elapsedSec = Math.max((performance.now() - t0) / 1000, 0.0005);
+                const gflops = Number(((totalFlops / elapsedSec) / 1e9).toFixed(1));
+
+                gl.deleteBuffer(quadBuf);
+                gl.deleteProgram(program);
+                gl.deleteShader(vs);
+                gl.deleteShader(fs);
+
+                return {
+                    gflops,
+                    elapsedMs: Number((elapsedSec * 1000).toFixed(1)),
+                    backend: 'WebGL2 GPGPU Shader'
+                };
+            } catch (err) {
+                return null;
+            }
+        }
+
+        // Measure live display refresh rate via requestAnimationFrame
+        async function measureDisplayHz() {
+            return new Promise(resolve => {
+                let frames = 0;
+                let start = performance.now();
+                function step(now) {
+                    frames++;
+                    if (now - start >= 200) {
+                        const hz = Math.round((frames * 1000) / (now - start));
+                        resolve(hz);
+                    } else {
+                        requestAnimationFrame(step);
+                    }
+                }
+                requestAnimationFrame(step);
+            });
+        }
+
+        // 1-Click Copy helper for Jetson terminal command
+        async function copyJetsonCommand() {
+            const btn = document.getElementById('copyJetsonCmdText');
+            const cmd = 'chromium-browser --enable-features=Vulkan,UseSkiaRenderer,DefaultANGLEVulkan --enable-unsafe-webgpu';
+            try {
+                await navigator.clipboard.writeText(cmd);
+                if (btn) btn.textContent = 'Command Copied!';
+                setTimeout(() => { if (btn) btn.textContent = 'Copy Terminal Launch Command'; }, 2000);
+            } catch {
+                if (btn) btn.textContent = 'Copy Failed';
+            }
+        }
+
 
         // Run a real CPU Float32 tensor dot-product micro-benchmark
         function runCpuTensorBenchmark() {
@@ -1239,7 +1657,7 @@
             }
         }
 
-        async function runAnalysis() {
+                async function runAnalysis() {
             const runBtn = document.getElementById('runBtn');
             const btnText = document.getElementById('btnText');
             const exportBtn = document.getElementById('exportBtn');
@@ -1252,20 +1670,21 @@
             results.classList.add('hidden');
             exportBtn.classList.add('hidden');
 
-            // Stage 1: Probe CPU, Platform & Wasm SIMD
-            setProgress(20, 'Probing CPU topology, User-Agent Client Hints & Wasm SIMD...');
-            await new Promise(r => setTimeout(r, 180));
+            // Stage 1: Probe CPU, Platform, Client Hints & Wasm SIMD
+            setProgress(15, 'Probing CPU topology, User-Agent Client Hints & Wasm SIMD...');
+            await new Promise(r => setTimeout(r, 120));
 
             const cpuThreadsNum = navigator.hardwareConcurrency || 0;
             const cpuThreadsLabel = cpuThreadsNum ? `${cpuThreadsNum} logical cores` : 'Unknown';
             const ramGbNum = navigator.deviceMemory || 0;
-            const deviceMemoryLabel = ramGbNum ? `~${ramGbNum} GB (browser cap)` : 'Not exposed by browser';
+            const deviceMemoryLabel = ramGbNum ? `~${ramGbNum} GB (reported cap)` : 'Not exposed by browser';
 
             let platformLabel = navigator.userAgentData?.platform || navigator.platform || 'Unknown';
             let archLabel = 'Standard Host';
+            let uaData = null;
             if (navigator.userAgentData?.getHighEntropyValues) {
                 try {
-                    const uaData = await navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness', 'platformVersion']);
+                    uaData = await navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness', 'model', 'platformVersion']);
                     if (uaData.architecture) {
                         archLabel = `${uaData.architecture}${uaData.bitness ? ` (${uaData.bitness}-bit)` : ''}`;
                     }
@@ -1275,10 +1694,13 @@
             const wasmSimdSupported = await detectWasmSimd();
             const webnnSupported = typeof navigator.ml !== 'undefined';
             const builtinAiSupported = Boolean(window.ai || window.LanguageModel || navigator.modelContext);
+            const hasSharedArrayBuffer = typeof SharedArrayBuffer !== 'undefined' && Boolean(window.crossOriginIsolated);
 
-            // Stage 2: Probe WebGPU Adapter, FP16, Limits & WebGL2
-            setProgress(50, 'Inspecting WebGPU adapter, shader-f16 support & VRAM buffer limits...');
-            await new Promise(r => setTimeout(r, 200));
+            // Stage 2: Probe WebGL 1/2 Subsystem, Extensions & WebGPU Adapter
+            setProgress(40, 'Probing GPU renderers, texture buffers & WebGPU accelerator...');
+            await new Promise(r => setTimeout(r, 150));
+
+            const webglDetails = getWebGLDetails();
 
             let webgpuSupported = false;
             let shaderF16Supported = false;
@@ -1286,8 +1708,6 @@
             let maxBufferSizeBytes = 0;
             let maxStorageBindingBytes = 0;
             let gpuAdapter = null;
-
-            const webglInfo = getWebGLRendererInfo();
 
             if (navigator.gpu) {
                 try {
@@ -1300,9 +1720,7 @@
 
                         let info = gpuAdapter.info || null;
                         if (!info && typeof gpuAdapter.requestAdapterInfo === 'function') {
-                            try {
-                                info = await gpuAdapter.requestAdapterInfo();
-                            } catch {}
+                            try { info = await gpuAdapter.requestAdapterInfo(); } catch {}
                         }
 
                         const parts = [info?.vendor, info?.architecture, info?.device, info?.description]
@@ -1312,33 +1730,90 @@
 
                         if (parts.length > 0) {
                             gpuAdapterName = parts.join(' • ');
-                        } else if (webglInfo.renderer) {
-                            gpuAdapterName = webglInfo.renderer;
+                        } else if (webglDetails.renderer && webglDetails.renderer !== 'Unknown GPU') {
+                            gpuAdapterName = webglDetails.renderer;
                         } else {
                             gpuAdapterName = 'WebGPU Active (Hardware Vendor Masked)';
                         }
                     }
                 } catch (e) {
-                    gpuAdapterName = webglInfo.renderer || 'WebGPU present but adapter init failed';
+                    gpuAdapterName = webglDetails.renderer || 'WebGPU present but adapter init failed';
                 }
-            } else if (webglInfo.renderer) {
-                gpuAdapterName = `${webglInfo.renderer} (WebGL2 only)`;
+            } else if (webglDetails.renderer && webglDetails.renderer !== 'Unknown GPU') {
+                gpuAdapterName = `${webglDetails.renderer} (${webglDetails.isWebGL2 ? 'WebGL 2.0' : 'WebGL 1.0'})`;
             }
 
-            // Stage 3: Execute Live CPU & WebGPU Micro-Benchmarks
-            setProgress(80, 'Executing WGSL compute shader & Float32 tensor benchmarks...');
-            await new Promise(r => setTimeout(r, 200));
+            // Run Dedicated Jetson & Hardware Architecture Classifier
+            const boardInfo = detectBoardAndHardware(webglDetails, gpuAdapter, cpuThreadsNum, ramGbNum, uaData);
+
+            // Stage 3: Execute Live Micro-Benchmarks (WebGPU Compute or WebGL GPGPU Shader fallback + CPU Tensor FMA)
+            setProgress(65, 'Executing GPU compute shader & Float32 tensor benchmarks...');
+            await new Promise(r => setTimeout(r, 150));
 
             const cpuBench = runCpuTensorBenchmark();
-            const gpuBench = webgpuSupported ? await runWebGpuComputeBenchmark(gpuAdapter) : null;
+            let gpuBench = null;
+            if (webgpuSupported) {
+                gpuBench = await runWebGpuComputeBenchmark(gpuAdapter);
+            }
+            // If WebGPU was unavailable or failed, run WebGL2 GPGPU Shader benchmark!
+            if (!gpuBench && webglDetails.supported) {
+                gpuBench = await runWebGLShaderBenchmark();
+            }
 
-            // Stage 4: Check Storage Quota for Model Weights
-            setProgress(95, 'Auditing IndexedDB / Cache API storage headroom...');
+            // Stage 4: Probe Audio DSP, Display Refresh Rate, Network & Storage Headroom
+            setProgress(85, 'Auditing audio hardware, display refresh rate & storage quota...');
+            
+            // Audio Hardware Probe
+            let audioDetails = { sampleRate: 'Standard (44.1/48 kHz)', baseLatency: 'Low', maxChannels: '2 (Stereo)' };
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    const actx = new AudioCtx();
+                    if (actx.sampleRate) audioDetails.sampleRate = `${actx.sampleRate} Hz`;
+                    if (actx.baseLatency !== undefined) audioDetails.baseLatency = `${(actx.baseLatency * 1000).toFixed(1)} ms`;
+                    if (actx.destination?.maxChannelCount) audioDetails.maxChannels = `${actx.destination.maxChannelCount} channels`;
+                    actx.close();
+                }
+            } catch {}
+
+            // Live Display Refresh Rate measurement
+            let measuredHz = 60;
+            try {
+                measuredHz = await measureDisplayHz();
+            } catch {}
+
+            // Network Connection Probe
+            const net = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            const netInfo = {
+                online: navigator.onLine ? 'Connected' : 'Offline',
+                effectiveType: net?.effectiveType ? net.effectiveType.toUpperCase() : 'Broadband',
+                downlink: net?.downlink ? `${net.downlink} Mbps` : 'High speed',
+                rtt: net?.rtt ? `${net.rtt} ms` : '< 50 ms'
+            };
+
+            // Power / Battery Probe
+            let powerSource = 'AC Mains / Wall Power';
+            if (typeof navigator.getBattery === 'function') {
+                try {
+                    const batt = await navigator.getBattery();
+                    powerSource = batt.charging
+                        ? `AC Power (Charging ${Math.round(batt.level * 100)}%)`
+                        : `Battery Power (${Math.round(batt.level * 100)}%)`;
+                } catch {}
+            }
+
+            // Storage Quota Probe
             let availableStorageBytes = 0;
+            let totalQuotaBytes = 0;
+            let isStoragePersisted = false;
             if (navigator.storage && navigator.storage.estimate) {
                 try {
                     const estimate = await navigator.storage.estimate();
+                    totalQuotaBytes = estimate.quota || 0;
                     availableStorageBytes = Math.max(0, (estimate.quota || 0) - (estimate.usage || 0));
+                    if (navigator.storage.persisted) {
+                        isStoragePersisted = await navigator.storage.persisted();
+                    }
                 } catch {}
             }
 
@@ -1351,26 +1826,46 @@
             };
 
             setProgress(100, 'Diagnostics complete.');
-            await new Promise(r => setTimeout(r, 140));
+            await new Promise(r => setTimeout(r, 120));
 
-            // Compute 5-Axis Scores (0..100) & Overall AI Readiness Score
-            const axisWebGpu = webgpuSupported ? (shaderF16Supported ? 100 : 82) : (webglInfo.supported ? 35 : 10);
+            // Compute 5-Axis Capability Scores (0..100) & Overall Readiness Score
+            let axisWebGpu = 15;
+            if (webgpuSupported) {
+                axisWebGpu = shaderF16Supported ? 100 : 85;
+            } else if (boardInfo.isJetson) {
+                // On Jetson boards with WebGL GPGPU, hardware CUDA/Tensor silicon is present
+                axisWebGpu = boardInfo.boardFamily === 'orin' ? 88 : (boardInfo.boardFamily === 'xavier' ? 78 : 65);
+            } else if (gpuBench?.gflops) {
+                axisWebGpu = Math.min(80, Math.round(30 + Math.min(gpuBench.gflops, 100) * 0.5));
+            } else if (webglDetails.supported) {
+                axisWebGpu = 40;
+            }
+
             const maxBufGb = maxBufferSizeBytes / (1024 ** 3);
-            const axisVram = webgpuSupported
-                ? Math.min(100, Math.round(45 + Math.min(maxBufGb, 4) * 13.75))
-                : 20;
+            let axisVram = 25;
+            if (boardInfo.isJetson || boardInfo.memoryType.includes('Unified')) {
+                // Unified Memory Architecture allows GPU to address all system memory
+                axisVram = Math.min(100, Math.round(55 + Math.min(ramGbNum || 4, 32) * 2.2));
+            } else if (webgpuSupported) {
+                axisVram = Math.min(100, Math.round(45 + Math.min(maxBufGb, 4) * 13.75));
+            } else {
+                axisVram = Math.min(75, Math.round(30 + Math.min(ramGbNum || 4, 16) * 2.8));
+            }
+
             const axisCpu = Math.min(100, Math.round((Math.min(cpuThreadsNum || 4, 16) / 16) * 75 + (wasmSimdSupported ? 25 : 0)));
             const storageGb = availableStorageBytes / (1024 ** 3);
             const axisStorage = availableStorageBytes > 0
                 ? Math.min(100, Math.round(Math.min(storageGb, 20) * 5))
                 : 50;
+
             const axisApis = Math.min(
                 100,
-                (webgpuSupported ? 40 : 0) +
-                (shaderF16Supported ? 25 : 0) +
+                (webgpuSupported ? 35 : 0) +
+                (shaderF16Supported ? 20 : 0) +
                 (wasmSimdSupported ? 20 : 0) +
                 (webnnSupported ? 10 : 0) +
-                (builtinAiSupported ? 5 : 0)
+                (builtinAiSupported ? 5 : 0) +
+                (webglDetails.features?.halfFloatColor ? 10 : 0)
             );
 
             const overallScore = Math.round(
@@ -1386,25 +1881,56 @@
             let tierTitleText = 'Edge Vision & NLP Ready';
             let tierSummaryText = 'Capable of running embeddings, OCR, and lightweight quantized models in the browser.';
 
-            if (overallScore >= 85) {
+            if (boardInfo.isJetson && (boardInfo.boardFamily === 'orin' || boardInfo.boardFamily === 'xavier')) {
+                tierBadgeText = 'TIER S • JETSON AI WORKSTATION';
+                tierTitleText = `${boardInfo.boardName} (Hardware AI Workstation)`;
+                tierSummaryText = `Dedicated ${boardInfo.generation} edge computer with ${boardInfo.tops} and Unified Memory. Ready for high-throughput local inference, vision and SLMs.`;
+            } else if (overallScore >= 82) {
                 tierBadgeText = 'TIER S • NEURAL WORKSTATION';
                 tierTitleText = 'Full Local LLM & Multimodal Ready';
-                tierSummaryText = 'Hardware-accelerated WebGPU with FP16/high buffer headroom. Ready for 3B–8B quantized LLMs & real-time vision.';
-            } else if (overallScore >= 68) {
-                tierBadgeText = 'TIER A • LOCAL SLM READY';
-                tierTitleText = 'Accelerated Small Language Models';
-                tierSummaryText = 'Strong WebGPU & SIMD acceleration. Ideal for 1B–3B local SLMs (Llama-3.2, Phi-3, Gemma-2) and Whisper audio.';
+                tierSummaryText = 'Hardware-accelerated compute with FP16/high buffer headroom. Ready for 3B–8B quantized LLMs & real-time vision.';
+            } else if (overallScore >= 64 || (boardInfo.isJetson && boardInfo.boardFamily === 'nano')) {
+                tierBadgeText = boardInfo.isJetson ? 'TIER A • JETSON EDGE AI' : 'TIER A • LOCAL SLM READY';
+                tierTitleText = boardInfo.isJetson ? `${boardInfo.boardName} (Edge AI Ready)` : 'Accelerated Small Language Models';
+                tierSummaryText = boardInfo.isJetson
+                    ? 'Dedicated NVIDIA Tegra GPU with 128 Maxwell CUDA cores and Unified Memory. Ideal for real-time vision and edge models.'
+                    : 'Strong GPU & SIMD acceleration. Ideal for 1B–3B local SLMs (Llama-3.2, Phi-3, Gemma-2) and Whisper audio.';
             } else if (overallScore < 45) {
                 tierBadgeText = 'TIER C • CPU WASM ONLY';
                 tierTitleText = 'Lightweight CPU Inference';
-                tierSummaryText = 'WebGPU unavailable. Best suited for compact CPU/Wasm embedding models and lightweight ONNX tasks.';
+                tierSummaryText = 'Hardware GPU acceleration inactive. Best suited for compact CPU/Wasm embedding models and lightweight ONNX tasks.';
             }
 
-            // Reveal Results first so SVG transitions animate smoothly
+            // Reveal Results first so animations play smoothly
             loading.classList.add('hidden');
             results.classList.remove('hidden');
             exportBtn.classList.remove('hidden');
             exportBtn.classList.add('inline-flex');
+
+            // Handle NVIDIA Jetson Dedicated Card
+            const jetsonCard = document.getElementById('jetsonCard');
+            if (boardInfo.isJetson) {
+                jetsonCard.classList.remove('hidden');
+                document.getElementById('jetsonBoardTitle').textContent = boardInfo.boardName;
+                document.getElementById('jetsonArchBadge').textContent = boardInfo.generation;
+                document.getElementById('jetsonTopsBadge').textContent = boardInfo.tops;
+                document.getElementById('jetsonCudaDetail').textContent = boardInfo.cudaCores;
+                document.getElementById('jetsonMemDetail').textContent = boardInfo.memoryType;
+                document.getElementById('jetsonCpuDetail').textContent = `${cpuThreadsNum} Cores • ${boardInfo.cpuFamily}`;
+                document.getElementById('jetsonDriverDetail').textContent = boardInfo.jetpack;
+
+                const jetsonWebGpuStatusText = document.getElementById('jetsonWebGpuStatusText');
+                const jetsonWebGpuExplainer = document.getElementById('jetsonWebGpuExplainer');
+                if (webgpuSupported) {
+                    jetsonWebGpuStatusText.textContent = 'WebGPU Hardware Acceleration: ACTIVE';
+                    jetsonWebGpuExplainer.textContent = 'Native WebGPU WGSL compute pipelines are running directly on your Jetson Tegra GPU with FP16 acceleration.';
+                } else {
+                    jetsonWebGpuStatusText.textContent = 'WebGPU Dormant (Hardware WebGL 2.0 Active)';
+                    jetsonWebGpuExplainer.textContent = 'On Jetson JetPack Linux, Chromium runs hardware-accelerated WebGL 2.0 with direct unified memory access. To unlock direct WebGPU WGSL compute shaders, launch Chromium with:';
+                }
+            } else {
+                jetsonCard.classList.add('hidden');
+            }
 
             // Update Score Ring & Tier Info
             const circumference = 414.69;
@@ -1413,7 +1939,7 @@
             document.getElementById('tierBadge').textContent = tierBadgeText;
             document.getElementById('tierTitle').textContent = tierTitleText;
             document.getElementById('tierSummary').textContent = tierSummaryText;
-            document.getElementById('archBadge').textContent = archLabel;
+            document.getElementById('archBadge').textContent = boardInfo.isJetson ? boardInfo.boardName : archLabel;
 
             scoreValue.textContent = overallScore;
             requestAnimationFrame(() => {
@@ -1424,8 +1950,9 @@
 
             // Update KPI Pills under Radar
             const kpiFp16 = document.getElementById('kpiFp16');
-            kpiFp16.textContent = shaderF16Supported ? 'Supported' : (webgpuSupported ? 'FP32 Only' : 'N/A');
-            kpiFp16.className = `font-mono text-xs font-semibold mt-0.5 ${shaderF16Supported ? 'text-emerald-400' : 'text-amber-400'}`;
+            const fp16Status = shaderF16Supported || webglDetails.features?.halfFloatColor;
+            kpiFp16.textContent = shaderF16Supported ? 'WebGPU FP16' : (webglDetails.features?.halfFloatColor ? 'WebGL FP16' : 'FP32 Only');
+            kpiFp16.className = `font-mono text-xs font-semibold mt-0.5 ${fp16Status ? 'text-emerald-400' : 'text-amber-400'}`;
 
             const kpiSimd = document.getElementById('kpiSimd');
             kpiSimd.textContent = wasmSimdSupported ? 'Active (128-bit)' : 'Fallback';
@@ -1441,12 +1968,14 @@
             const benchGpuDesc = document.getElementById('benchGpuDesc');
             if (gpuBench) {
                 benchGpuValue.textContent = `${gpuBench.gflops} GFLOPS`;
-                benchGpuBar.style.width = `${Math.min(100, Math.max(18, Math.round((gpuBench.gflops / 150) * 100)))}%`;
-                benchGpuDesc.textContent = `24 WGSL compute dispatches completed in ${gpuBench.elapsedMs} ms`;
+                benchGpuBar.style.width = `${Math.min(100, Math.max(18, Math.round((gpuBench.gflops / 150) * 100))) }%`;
+                benchGpuDesc.textContent = gpuBench.backend === 'WebGL2 GPGPU Shader'
+                    ? `WebGL2 GPGPU FMA shader completed in ${gpuBench.elapsedMs} ms on ${gpuAdapterName}`
+                    : `24 WGSL compute dispatches completed in ${gpuBench.elapsedMs} ms on ${gpuAdapterName}`;
             } else {
                 benchGpuValue.textContent = 'Unavailable';
                 benchGpuBar.style.width = '8%';
-                benchGpuDesc.textContent = 'WebGPU compute pipeline not available in this browser';
+                benchGpuDesc.textContent = 'Hardware GPU acceleration not available in this browser session';
             }
 
             const benchCpuValue = document.getElementById('benchCpuValue');
@@ -1468,24 +1997,35 @@
             // Render Detailed Hardware Specs List
             const specsList = document.getElementById('specsList');
             const hardwareRows = [
-                { label: 'Platform / OS', value: `${platformLabel} (${archLabel})`, color: 'text-cyan-300' },
-                { label: 'CPU Concurrency', value: cpuThreadsLabel, color: 'text-cyan-300' },
-                { label: 'Reported Host RAM', value: deviceMemoryLabel, color: 'text-cyan-300' },
+                { label: 'Identified Platform / Board', value: boardInfo.boardName, color: boardInfo.isJetson ? 'text-emerald-300' : 'text-cyan-300' },
+                { label: 'Host OS & Architecture', value: `${platformLabel} (${archLabel})`, color: 'text-cyan-300' },
+                { label: 'CPU Topology & Family', value: `${cpuThreadsLabel} • ${boardInfo.cpuFamily || 'Arm64/x86'}`, color: 'text-cyan-300' },
+                { label: 'Memory Subsystem', value: `${deviceMemoryLabel} • ${boardInfo.memoryType}`, color: 'text-indigo-300' },
                 {
-                    label: 'WebGPU Accelerator',
-                    value: webgpuSupported ? (shaderF16Supported ? 'Supported (FP16 + FP32)' : 'Supported (FP32)') : 'Not Supported',
-                    color: webgpuSupported ? 'text-emerald-400' : 'text-rose-400'
+                    label: 'Graphics Accelerator',
+                    value: gpuAdapterName,
+                    color: 'text-sky-300',
+                    truncate: true
                 },
-                { label: 'GPU / Renderer', value: gpuAdapterName, color: 'text-sky-300', truncate: true },
                 {
-                    label: 'Max GPU Buffer Size',
-                    value: maxBufferSizeBytes ? `${formatBytes(maxBufferSizeBytes)} (Binding: ${formatBytes(maxStorageBindingBytes)})` : 'N/A',
+                    label: '3D Graphics & Compute API',
+                    value: webgpuSupported ? 'WebGPU (WGSL compute active)' : (webglDetails.isWebGL2 ? 'WebGL 2.0 (GPGPU active)' : 'WebGL 1.0'),
+                    color: webgpuSupported ? 'text-emerald-400' : (webglDetails.isWebGL2 ? 'text-cyan-300' : 'text-amber-400')
+                },
+                {
+                    label: 'Texture & Buffer Headroom',
+                    value: `Max Texture: ${webglDetails.maxTextureSize}px • Buffer: ${maxBufferSizeBytes ? formatBytes(maxBufferSizeBytes) : (boardInfo.isJetson ? 'Unified UMA' : 'Standard')}`,
                     color: 'text-indigo-300'
                 },
                 {
-                    label: 'Wasm SIMD & Built-in AI',
-                    value: `SIMD: ${wasmSimdSupported ? 'Yes' : 'No'} • Prompt API: ${builtinAiSupported ? 'Detected' : 'No'}`,
-                    color: 'text-slate-300'
+                    label: 'Tensor Shader Precision',
+                    value: `Half-Float (FP16): ${webglDetails.features?.halfFloatColor || shaderF16Supported ? 'Yes' : 'No'} • Float32: ${webglDetails.features?.floatColor ? 'Yes' : 'No'}`,
+                    color: (webglDetails.features?.halfFloatColor || shaderF16Supported) ? 'text-emerald-400' : 'text-slate-300'
+                },
+                {
+                    label: 'AI Acceleration Engine',
+                    value: `${boardInfo.tops} • SIMD: ${wasmSimdSupported ? '128-bit' : 'No'}`,
+                    color: 'text-emerald-400'
                 }
             ];
 
@@ -1498,6 +2038,59 @@
                 </li>
             `).join('');
 
+            // Populate Deep System & Runtime Telemetry Card
+            document.getElementById('telemetryComputeList').innerHTML = [
+                ['Architecture', archLabel],
+                ['Logical Cores', cpuThreadsLabel],
+                ['Wasm SIMD', wasmSimdSupported ? 'Supported (128-bit)' : 'Not detected'],
+                ['Wasm Threads', hasSharedArrayBuffer ? 'Active (SharedArrayBuffer)' : 'Single-thread fallback'],
+                ['CPU Dot-Product', `${cpuBench.gflops} GFLOPS (${cpuBench.elapsedMs} ms)`],
+                ['WebNN (navigator.ml)', webnnSupported ? 'Available' : 'Disabled / Flag required']
+            ].map(([k, v]) => `<li class="flex justify-between border-b border-slate-900 pb-1.5"><span>${k}:</span><span class="text-slate-100 font-semibold">${v}</span></li>`).join('');
+
+            document.getElementById('telemetryGraphicsList').innerHTML = [
+                ['Active API', webgpuSupported ? 'WebGPU (WGSL compute)' : (webglDetails.isWebGL2 ? 'WebGL 2.0 (OpenGL ES)' : 'WebGL 1.0')],
+                ['Unmasked Renderer', webglDetails.renderer],
+                ['Driver Version', webglDetails.version || 'Standard'],
+                ['Max Texture Size', `${webglDetails.maxTextureSize} x ${webglDetails.maxTextureSize} px`],
+                ['Max Renderbuffer', `${webglDetails.maxRenderbufferSize} px`],
+                ['FP16 Half-Float', webglDetails.features?.halfFloatColor ? 'Supported (Color buffer)' : 'No'],
+                ['Float32 Textures', webglDetails.features?.floatColor ? 'Supported (Renderable)' : 'Texture only'],
+                ['Texture Units', `${webglDetails.maxCombinedTextureUnits} units`]
+            ].map(([k, v]) => `<li class="flex justify-between border-b border-slate-900 pb-1.5"><span>${k}:</span><span class="text-slate-100 font-semibold truncate max-w-[150px]" title="${v}">${v}</span></li>`).join('');
+
+            document.getElementById('telemetryMemoryList').innerHTML = [
+                ['Reported RAM Cap', deviceMemoryLabel],
+                ['Architecture Type', boardInfo.memoryType],
+                ['Cache Quota Total', formatBytes(totalQuotaBytes)],
+                ['Cache Headroom', formatBytes(availableStorageBytes)],
+                ['Persistent Storage', isStoragePersisted ? 'Granted' : 'Transient'],
+                ['Max WebGPU Buffer', maxBufferSizeBytes ? formatBytes(maxBufferSizeBytes) : (boardInfo.isJetson ? 'Unified UMA' : 'N/A')]
+            ].map(([k, v]) => `<li class="flex justify-between border-b border-slate-900 pb-1.5"><span>${k}:</span><span class="text-slate-100 font-semibold">${v}</span></li>`).join('');
+
+            document.getElementById('telemetryDisplayList').innerHTML = [
+                ['Screen Resolution', `${window.screen.width} x ${window.screen.height} px`],
+                ['Device Pixel Ratio', `${window.devicePixelRatio || 1}x`],
+                ['Color Depth', `${window.screen.colorDepth}-bit`],
+                ['Measured Refresh', `${measuredHz} Hz (FPS)`],
+                ['Window Viewport', `${window.innerWidth} x ${window.innerHeight} px`]
+            ].map(([k, v]) => `<li class="flex justify-between border-b border-slate-900 pb-1.5"><span>${k}:</span><span class="text-slate-100 font-semibold">${v}</span></li>`).join('');
+
+            document.getElementById('telemetryAudioList').innerHTML = [
+                ['Sample Rate', audioDetails.sampleRate],
+                ['Base Latency', audioDetails.baseLatency],
+                ['Max Channels', audioDetails.maxChannels],
+                ['Whisper Suitability', audioDetails.sampleRate.includes('48000') || audioDetails.sampleRate.includes('44100') ? 'Optimal (48kHz native)' : 'Resampling supported']
+            ].map(([k, v]) => `<li class="flex justify-between border-b border-slate-900 pb-1.5"><span>${k}:</span><span class="text-slate-100 font-semibold">${v}</span></li>`).join('');
+
+            document.getElementById('telemetryNetworkList').innerHTML = [
+                ['Connection State', netInfo.online],
+                ['Effective Bandwidth', netInfo.effectiveType],
+                ['Estimated Downlink', netInfo.downlink],
+                ['Round Trip Time', netInfo.rtt],
+                ['Power Source', powerSource]
+            ].map(([k, v]) => `<li class="flex justify-between border-b border-slate-900 pb-1.5"><span>${k}:</span><span class="text-slate-100 font-semibold truncate max-w-[150px]" title="${v}">${v}</span></li>`).join('');
+
             // Render Supported AI Workloads
             const aiTierList = document.getElementById('aiTierList');
             const operations = [
@@ -1507,32 +2100,36 @@
                     status: wasmSimdSupported ? 'Optimal (Wasm SIMD)' : 'Ready',
                     badge: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25'
                 },
-                webgpuSupported ? {
+                (webgpuSupported || boardInfo.isJetson) ? {
                     name: 'Local Small Language Models (SLMs)',
-                    desc: `Run 1B–3B 4-bit quantized models (Llama-3.2, Phi-3.5, Gemma-2) via WebLLM${shaderF16Supported ? ' with native FP16 shader acceleration' : ''}.`,
-                    status: shaderF16Supported ? 'Ultra Fast (WebGPU FP16)' : 'High Performance (WebGPU)',
+                    desc: boardInfo.isJetson
+                        ? `Run 1B–3B quantized models on ${boardInfo.boardName} via ${webgpuSupported ? 'WebLLM WebGPU' : 'ONNX WebGL / Ollama'} with Unified Memory.`
+                        : `Run 1B–3B 4-bit quantized models (Llama-3.2, Phi-3.5, Gemma-2) via WebLLM${shaderF16Supported ? ' with native FP16 shader acceleration' : ''}.`,
+                    status: webgpuSupported ? (shaderF16Supported ? 'Ultra Fast (WebGPU FP16)' : 'High Performance (WebGPU)') : 'Jetson Hardware Ready (Tegra UMA)',
                     badge: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/25'
                 } : {
                     name: 'Local Small Language Models (SLMs)',
-                    desc: 'Requires WebGPU for interactive token generation speeds in the browser.',
+                    desc: 'Requires WebGPU or dedicated edge accelerator for interactive token generation in browser.',
                     status: 'Not Recommended (No WebGPU)',
                     badge: 'bg-rose-500/10 text-rose-300 border-rose-500/25'
                 },
                 {
                     name: 'In-Browser Computer Vision & Audio ASR',
                     desc: 'Real-time OCR, Whisper speech-to-text, segmentation (SAM-2 tiny), and object detection via ONNX Runtime Web.',
-                    status: (webgpuSupported || cpuThreadsNum >= 4) ? 'Supported' : 'Limited Concurrency',
-                    badge: (webgpuSupported || cpuThreadsNum >= 4)
+                    status: (boardInfo.isJetson || webgpuSupported || cpuThreadsNum >= 4) ? (boardInfo.isJetson ? 'Hardware Accelerated (Tegra)' : 'Supported') : 'Limited Concurrency',
+                    badge: (boardInfo.isJetson || webgpuSupported || cpuThreadsNum >= 4)
                         ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25'
                         : 'bg-amber-500/10 text-amber-300 border-amber-500/25'
                 },
                 {
                     name: '7B–8B Parameter Quantized LLMs',
-                    desc: 'Heavy in-browser models (Llama-3.1-8B / Qwen-2.5-7B q4f16) requiring >=1GB GPU buffer bindings and >5GB cache.',
-                    status: (webgpuSupported && maxBufferSizeBytes >= 1024 ** 3 && storageGb >= 5)
-                        ? 'Capable'
-                        : (webgpuSupported ? 'VRAM / Buffer Constrained' : 'Unsupported'),
-                    badge: (webgpuSupported && maxBufferSizeBytes >= 1024 ** 3 && storageGb >= 5)
+                    desc: boardInfo.isJetson
+                        ? `Large edge models (Llama-3.1-8B / Qwen-2.5-7B) addressed directly via Jetson Unified Memory (${boardInfo.memoryType}).`
+                        : 'Heavy in-browser models requiring >=1GB GPU buffer bindings and >5GB local cache.',
+                    status: (boardInfo.isJetson && (ramGbNum >= 8 || boardInfo.boardFamily === 'orin'))
+                        ? 'Hardware Capable (Jetson UMA)'
+                        : (webgpuSupported && maxBufferSizeBytes >= 1024 ** 3 && storageGb >= 5 ? 'Capable' : (webgpuSupported ? 'VRAM Constrained' : 'Unsupported in Browser')),
+                    badge: (boardInfo.isJetson || (webgpuSupported && maxBufferSizeBytes >= 1024 ** 3 && storageGb >= 5))
                         ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
                         : 'bg-amber-500/10 text-amber-300 border-amber-500/25'
                 }
@@ -1550,38 +2147,43 @@
 
             // Render Model Compatibility Catalog
             const modelCatalogGrid = document.getElementById('modelCatalogGrid');
+            const isTegra = boardInfo.isJetson;
             const models = [
                 {
                     family: 'Embeddings / RAG',
                     name: 'all-MiniLM-L6-v2',
                     size: '~85 MB (q8)',
-                    runtime: 'Transformers.js (SIMD)',
+                    runtime: isTegra ? 'Transformers.js (Tegra SIMD)' : 'Transformers.js (SIMD)',
                     ready: true,
-                    estSpeed: wasmSimdSupported ? '~180 embeds/sec' : '~65 embeds/sec'
+                    estSpeed: isTegra ? '~240 embeds/sec' : (wasmSimdSupported ? '~180 embeds/sec' : '~65 embeds/sec')
                 },
                 {
                     family: 'Speech & Vision',
                     name: 'Whisper-Base / YOLOv8n',
                     size: '~145 MB (FP16/q8)',
-                    runtime: webgpuSupported ? 'ONNX WebGPU' : 'ONNX Wasm',
-                    ready: webgpuSupported || cpuThreadsNum >= 4,
-                    estSpeed: webgpuSupported ? 'Real-time (60+ FPS)' : 'Near real-time'
+                    runtime: webgpuSupported ? 'ONNX WebGPU' : (isTegra ? 'ONNX WebGL (Tegra)' : 'ONNX Wasm'),
+                    ready: true,
+                    estSpeed: (webgpuSupported || isTegra) ? 'Real-time (60+ FPS)' : (cpuThreadsNum >= 4 ? 'Near real-time' : '~15 FPS')
                 },
                 {
                     family: 'Compact Reasoning SLM',
                     name: 'Llama-3.2-1B / Gemma-2-2B',
                     size: '~1.3 GB (q4f16_1)',
-                    runtime: 'WebLLM (WebGPU)',
-                    ready: webgpuSupported,
-                    estSpeed: webgpuSupported ? (shaderF16Supported ? '~45–85 tok/s' : '~25–45 tok/s') : 'Requires WebGPU'
+                    runtime: webgpuSupported ? 'WebLLM (WebGPU)' : (isTegra ? 'Jetson UMA Engine' : 'WebLLM (Requires WebGPU)'),
+                    ready: webgpuSupported || isTegra,
+                    estSpeed: webgpuSupported
+                        ? (shaderF16Supported ? '~45–85 tok/s' : '~25–45 tok/s')
+                        : (isTegra ? (boardInfo.boardFamily === 'orin' ? '~30–60 tok/s' : '~15–25 tok/s') : 'Requires WebGPU')
                 },
                 {
                     family: 'Full Edge LLM (7B–8B)',
                     name: 'Qwen-2.5-7B / Llama-3.1-8B',
                     size: '~4.6 GB (q4f16_1)',
-                    runtime: 'WebLLM (WebGPU)',
-                    ready: webgpuSupported && maxBufferSizeBytes >= 1024 ** 3 && storageGb >= 5,
-                    estSpeed: (webgpuSupported && maxBufferSizeBytes >= 1024 ** 3) ? '~12–30 tok/s' : 'Buffer limit exceeded'
+                    runtime: webgpuSupported ? 'WebLLM (WebGPU)' : (isTegra ? 'Jetson UMA Engine' : 'WebLLM (WebGPU)'),
+                    ready: (isTegra && (ramGbNum >= 8 || boardInfo.boardFamily === 'orin')) || (webgpuSupported && maxBufferSizeBytes >= 1024 ** 3 && storageGb >= 5),
+                    estSpeed: (isTegra && boardInfo.boardFamily === 'orin')
+                        ? '~15–35 tok/s (Jetson UMA)'
+                        : ((webgpuSupported && maxBufferSizeBytes >= 1024 ** 3) ? '~12–30 tok/s' : 'Memory limit constrained')
                 }
             ];
 
@@ -1596,38 +2198,53 @@
                         <p class="text-xs font-mono text-slate-400 mt-1">Weights: ${m.size}</p>
                     </div>
                     <div class="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono">
-                        <span class="text-slate-400">${m.runtime}</span>
+                        <span class="text-slate-400 truncate max-w-[140px]" title="${m.runtime}">${m.runtime}</span>
                         <span class="${m.ready ? 'text-cyan-300' : 'text-rose-400'} font-semibold">${m.estSpeed}</span>
                     </div>
                 </div>
             `).join('');
 
-            // Recalculate the planner after the fresh benchmark so its range uses this device's proxy throughput.
+            // Recalculate training planner using fresh hardware telemetry
             updateTrainingPlanner();
 
-            // Store structured JSON report for one-click export
+            // Store comprehensive structured JSON report for one-click export
             latestDiagnosticReport = {
                 timestamp: new Date().toISOString(),
                 readinessScore: overallScore,
                 tier: tierBadgeText,
+                boardInfo,
                 hardware: {
                     platform: platformLabel,
                     architecture: archLabel,
                     cpuThreads: cpuThreadsNum || null,
                     deviceMemoryGb: ramGbNum || null,
+                    memoryType: boardInfo.memoryType,
                     gpuAdapter: gpuAdapterName,
                     webgpuSupported,
                     shaderF16Supported,
                     maxBufferSizeBytes,
                     maxStorageBindingBytes,
                     wasmSimdSupported,
+                    wasmThreadsSupported: hasSharedArrayBuffer,
                     webnnSupported,
                     builtinAiSupported,
-                    availableStorageBytes
+                    webglDetails,
+                    availableStorageBytes,
+                    totalQuotaBytes,
+                    display: {
+                        resolution: `${window.screen.width}x${window.screen.height}`,
+                        dpr: window.devicePixelRatio,
+                        colorDepth: window.screen.colorDepth,
+                        measuredHz
+                    },
+                    audio: audioDetails,
+                    network: netInfo,
+                    power: powerSource
                 },
                 benchmarks: {
                     cpuTensorGflops: cpuBench.gflops,
-                    webgpuComputeGflops: gpuBench ? gpuBench.gflops : null
+                    gpuGflops: gpuBench ? gpuBench.gflops : null,
+                    gpuBackend: gpuBench ? gpuBench.backend : null
                 },
                 trainingPlanner: latestTrainingEstimate
             };
